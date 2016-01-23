@@ -121,10 +121,23 @@ func (c *MonitorCommand) doDisplayBoxMonitoring(agent *Agent, conf *config.Confi
 func (c *MonitorCommand) doBoxMonitoring(agent *Agent, conf *config.Configuration) {
 	c.UI.Info(fmt.Sprintf("Display box provider statistics: %s", agent.Provider.Description()))
 	log.Printf("[DEBUG] Skybox box provider: %v", agent.Provider)
-	agent.Provider.Setup(conf)
-	agent.Provider.Authenticate()
-	agent.Output.Setup(conf)
-	agent.Output.Connect()
+
+	if err := agent.Provider.Setup(conf); err != nil {
+		c.UI.Error(err.Error())
+		return
+	}
+	if err := agent.Provider.Authenticate(); err != nil {
+		c.UI.Error(err.Error())
+		return
+	}
+	if err := agent.Output.Setup(conf); err != nil {
+		c.UI.Error(err.Error())
+		return
+	}
+	if err := agent.Output.Connect(); err != nil {
+		c.UI.Error(err.Error())
+		return
+	}
 	tick := time.Tick(time.Second * time.Duration(conf.Interval))
 	for _ = range tick {
 		resp, err := agent.Provider.Statistics()
@@ -140,17 +153,43 @@ func (c *MonitorCommand) doBoxMonitoring(agent *Agent, conf *config.Configuratio
 			resp.BandwidthUp, resp.BandwidthDown)
 
 		var points []*client.Point
-		tags := map[string]string{"rate": "rate-up-down"}
-		fields := map[string]interface{}{
+
+		rateTags := map[string]string{"rate": "rate-up-down"}
+		rateFields := map[string]interface{}{
 			"up":   resp.RateUp,
 			"down": resp.RateDown,
 		}
-		pt, err := client.NewPoint("rate", tags, fields, time.Now())
+		ratePt, err := client.NewPoint("rate", rateTags, rateFields, time.Now())
 		if err != nil {
-			fmt.Printf("Error creating statistics for output: %s\n", err.Error())
+			fmt.Printf("Error creating rate statistics for output: %s\n", err.Error())
 			continue
 		}
-		points = append(points, pt)
+		points = append(points, ratePt)
+
+		bytesTags := map[string]string{"bytes": "bytes-up-down"}
+		bytesFields := map[string]interface{}{
+			"up":   resp.BytesUp,
+			"down": resp.BytesDown,
+		}
+		bytesPt, err := client.NewPoint("bytes", bytesTags, bytesFields, time.Now())
+		if err != nil {
+			fmt.Printf("Error creating bytes statistics for output: %s\n", err.Error())
+			continue
+		}
+		points = append(points, bytesPt)
+
+		bandwidthTags := map[string]string{"bandwidth": "bandwidth-up-down"}
+		bandwidthFields := map[string]interface{}{
+			"up":   resp.BandwidthUp,
+			"down": resp.BandwidthDown,
+		}
+		bandwidthPt, err := client.NewPoint("bandwidth", bandwidthTags, bandwidthFields, time.Now())
+		if err != nil {
+			fmt.Printf("Error creating bandwidth statistics for output: %s\n", err.Error())
+			continue
+		}
+		points = append(points, bandwidthPt)
+
 		err = agent.Output.Write(points)
 		if err != nil {
 			fmt.Printf("Error writing statistics : %s\n", err.Error())
