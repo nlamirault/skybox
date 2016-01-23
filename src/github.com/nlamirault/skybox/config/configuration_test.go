@@ -40,9 +40,10 @@ url= "http://mafreebox.freebox.fr"
 token = "xxxxxxxx"
 
 [influxdb]
-host = "localhost:8086"
+url = "http://localhost:8086"
 username = "admin"
 password = "foo"
+database = "skybox"
 `)
 	err = ioutil.WriteFile(templateFile.Name(), data, 0700)
 	if err != nil {
@@ -67,9 +68,10 @@ password = "foo"
 	}
 
 	// Output plugin
-	if configuration.InfluxDB.Host != "localhost:8086" ||
+	if configuration.InfluxDB.URL != "http://localhost:8086" ||
 		configuration.InfluxDB.Username != "admin" ||
-		configuration.InfluxDB.Password != "foo" {
+		configuration.InfluxDB.Password != "foo" ||
+		configuration.InfluxDB.Database != "skybox" {
 		t.Fatalf("Configuration InfluxDB failed")
 	}
 
