@@ -59,15 +59,15 @@ type Provider interface {
 
 type ProviderConnectionStatistics struct {
 	// current download rate in byte/s
-	RateDown int `json:"rate_down",omitempty`
+	RateDown int `json:"rate_down"`
 	// current download rate in byte/s
-	RateUp int `json:"rate_up",omitempty`
+	RateUp int `json:"rate_up"`
 	// total downloaded bytes since last connection
-	BytesDown int `json:"bytes_down",omitempty`
+	BytesDown int `json:"bytes_down"`
 	// total uploaded bytes since last connection
-	BytesUp int `json:"bytes_up",omitempty`
+	BytesUp int `json:"bytes_up"`
 	// available upload bandwidth in bit/s
-	BandwidthUp int `json:"bandwidth_up",omitempty`
+	BandwidthUp int `json:"bandwidth_up"`
 	// available download bandwidth in bit/s
-	BandwidthDown int `json:"bandwidth_down",omitempty`
+	BandwidthDown int `json:"bandwidth_down"`
 }

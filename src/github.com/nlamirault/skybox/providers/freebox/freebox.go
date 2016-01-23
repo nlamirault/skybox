@@ -17,6 +17,7 @@ package freebox
 import (
 	"crypto/hmac"
 	"crypto/sha1"
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -49,10 +50,10 @@ type Client struct {
 	SessionToken string
 	Challenge    string
 	Password     string
-	Identifier   string `json:"app_id",omitempty`
-	Name         string `json:"app_name",omitempty`
-	Version      string `json:"app_version",omitempty`
-	DeviceName   string `json:"device_name",omitempty`
+	Identifier   string `json:"app_id"`
+	Name         string `json:"app_name"`
+	Version      string `json:"app_version"`
+	DeviceName   string `json:"device_name"`
 }
 
 // New returns a Freebox Client
@@ -164,6 +165,14 @@ func (c *Client) Statistics() (*providers.ProviderConnectionStatistics, error) {
 		nil,
 		&resp)
 	if err != nil {
+		apiError, err := makeAPIErrorResponse(err)
+		if err != nil {
+			return nil, err
+		}
+		if apiError.ErrorCode == AuthRequiredError {
+			c.openSession()
+			c.Statistics()
+		}
 		return nil, err
 	}
 	log.Printf("[DEBUG] Freebox connection status response: %s", resp)
@@ -225,4 +234,12 @@ func (c *Client) openSession() error {
 
 func (c *Client) getFreeboxAPIRequest(request string) string {
 	return fmt.Sprintf("%s/api/v%s/%s", c.Endpoint, APIVersion, request)
+}
+
+func makeAPIErrorResponse(e error) (*APIErrorResponse, error) {
+	var resp *APIErrorResponse
+	if err := json.Unmarshal([]byte(e.(*providers.APIError).Message), &resp); err != nil {
+		return nil, err
+	}
+	return resp, nil
 }
