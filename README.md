@@ -37,19 +37,21 @@ You can download the binaries :
 
 ### Freebox
 
+Setup configuration :
+
+```toml
+[freebox]
+url= "http://mafreebox.freebox.fr/"
+token = ""
+```
     $ skybox check box
 
 *skybox* will ask for an `app_token` using the API. A message will be displayed on
 the Freebox LCD asking the user to grant/deny access to the requesting app.
 
 Once the app has obtained a valid `app_token`, edit your configuration file, and setup this token into the
-specific entry:
+specific entry: `token`.
 
-```toml
-[freebox]
-url= "http://mafreebox.freebox.fr/"
-token = "...."
-```
 
 ### InfluxDB
 
