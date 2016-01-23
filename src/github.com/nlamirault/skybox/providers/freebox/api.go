@@ -27,13 +27,18 @@ const (
 	PendingToken string = "pending_token"
 	// Your app permissions does not allow accessing this API
 	InsufficientRights string = "insufficient_rights"
-
-// denied_from_external_ip	You are trying to get an app_token from a remote IP
-// invalid_request	Your request is invalid
-// ratelimited	Too many auth error have been made from your IP
-// new_apps_denied	New application token request has been disabled
-// apps_denied	API access from apps has been disabled
-// internal_error	Internal error
+	// You are trying to get an app_token from a remote IP
+	DeniedFromExternalIP string = "denied_from_external_ip"
+	// Your request is invalid
+	InvalidRequest string = "invalid_request"
+	// Too many auth error have been made from your IP
+	RateLimited string = "ratelimited"
+	// New application token request has been disabled
+	NewAppsDenied string = "new_apps_denied"
+	// API access from apps has been disabled
+	AppsDenied string = "apps_denied"
+	// Internal error
+	InternalError string = "internal_error"
 )
 
 // APIVersionResponse is returned by requesting `GET /api_version`
