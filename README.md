@@ -8,7 +8,16 @@ Master :
 Develop :
 * [![Circle CI](https://circleci.com/gh/nlamirault/skybox/tree/develop.svg?style=svg)](https://circleci.com/gh/nlamirault/skybox/tree/develop)
 
+*Skybox* is an agent collecting metrics from a box provider, and writing them into outputs.
+You could use [Grafana][] to display nice dashboards.
 
+Supported box providers :
+
+* [Freebox][]
+
+Supported outputs :
+
+* [InfluxDB][]
 
 ## Installation
 
@@ -22,7 +31,7 @@ You can download the binaries :
 
 ## Configuration
 
-Skybox configuration use [toml][] format. File is located into `$HOME/.config/skybox/skybox.toml`.
+*Skybox* configuration use [toml][] format. File is located into `$HOME/.config/skybox/skybox.toml`.
 
 ## Usage
 
@@ -41,7 +50,23 @@ specific entry:
 url= "http://mafreebox.freebox.fr/"
 token = "...."
 ```
-    $ skybox check box
+
+### InfluxDB
+
+Setup configuration :
+
+```toml
+[influxdb]
+url = "http://localhost:8086/"
+username = "root"
+password = "root"
+database = "skybox"
+retentionPolicy = "default"
+```
+
+And check connection :
+
+    $ skybox check output
 
 ## Development
 
@@ -53,13 +78,10 @@ token = "...."
 
         $ make build
 
-* Start outputs :
+* Start InfluxDB output (port `8083`) and Grafana (port `3000)
+using [Docker Compose][] :
 
-        $ docker run -d \
-            -p 8083:8083 -p 8086:8086
-            -e PRE_CREATE=skybox \
-            --name influxdb \
-            tutum/influxdb:0.9
+        $ docker-compose up
 
 * Launch unit tests :
 
@@ -87,14 +109,10 @@ Nicolas Lamirault <nicolas.lamirault@gmail.com>
 
 [badge-license]: https://img.shields.io/badge/license-Apache2-green.svg?style=flat
 
-[BoltDB]: https://github.com/boltdb/bolt
+[Freebox]: http://www.free.fr/adsl/freebox-revolution.html
 
-[Amazon S3]:https://aws.amazon.com/s3/
-[Google Cloud Storage]: https://cloud.google.com/storage/
+[InfluxDB]: https://influxdata.com/time-series-platform/influxdb/
 
-[Amazon KMS]: https://aws.amazon.com/kms/
-[GPG]: https://www.gnupg.org/
-[AES]: https://en.wikipedia.org/wiki/Advanced_Encryption_Standard
-
+[Grafana]: http://grafana.org/
 
 [toml]: https://github.com/toml-lang/toml
