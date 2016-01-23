@@ -66,8 +66,8 @@ func getConfigurationFile() (string, error) {
 	return filepath.Join(home, defaultConfigurationFile), nil
 }
 
-// Client provides a box provider client and output plugin client
-type Client struct {
+// Agent provides a box provider client and output plugin client
+type Agent struct {
 	Provider providers.Provider
 	Output   outputs.Output
 }
@@ -80,12 +80,8 @@ func getConfiguration(filename string) (*config.Configuration, error) {
 	return conf, nil
 }
 
-// NewClient creates a new instance of Client.
-func NewClient(conf *config.Configuration) (*Client, error) {
-	// conf, err := config.LoadFileConfig(filename)
-	// if err != nil {
-	// 	return nil, err
-	// }
+// NewAgent creates a new instance of Agent.
+func NewAgent(conf *config.Configuration) (*Agent, error) {
 	log.Printf("[DEBUG] Box Providers: %v\n", providers.Providers)
 	providerCreator := providers.Providers[conf.BoxProvider]
 	if providerCreator == nil {
@@ -100,7 +96,7 @@ func NewClient(conf *config.Configuration) (*Client, error) {
 	}
 	output := outputCreator()
 	log.Printf("[DEBUG] Output plugin: %v\n", output)
-	return &Client{
+	return &Agent{
 		Provider: provider,
 		Output:   output,
 	}, nil

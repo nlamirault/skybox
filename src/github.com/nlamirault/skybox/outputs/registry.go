@@ -2,15 +2,26 @@ package outputs
 
 import (
 	"github.com/influxdata/influxdb/client/v2"
+
+	"github.com/nlamirault/skybox/config"
 )
 
 type Output interface {
+	// Setup finalize output configuration
+	Setup(config *config.Configuration) error
+
 	// Connect to the Output
 	Connect() error
+
 	// Close any connections to the Output
 	Close() error
+
+	// Ping call the output to check connection
+	Ping() error
+
 	// Description returns a one-sentence description on the Output
 	Description() string
+
 	// Write takes in group of points to be written to the Output
 	Write(points []*client.Point) error
 }

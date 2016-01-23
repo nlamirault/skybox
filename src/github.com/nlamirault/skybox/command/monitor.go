@@ -19,7 +19,9 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
+	"github.com/influxdata/influxdb/client/v2"
 	"github.com/mitchellh/cli"
 
 	"github.com/nlamirault/skybox/config"
@@ -78,31 +80,31 @@ func (c *MonitorCommand) Run(args []string) int {
 		c.UI.Error(err.Error())
 		return 1
 	}
-	client, err := NewClient(conf)
+	agent, err := NewAgent(conf)
 	if err != nil {
 		c.UI.Error(err.Error())
 		return 1
 	}
-	log.Printf("[DEBUG] Skybox Client: %s", client)
+	log.Printf("[DEBUG] Skybox agent: %s", agent)
 
 	action := args[0]
 	switch action {
 	case "display":
-		c.doDisplayBoxMonitoring(client, conf)
+		c.doDisplayBoxMonitoring(agent, conf)
 	case "box":
-		c.doBoxMonitoring(client, conf)
+		c.doBoxMonitoring(agent, conf)
 	default:
 		f.Usage()
 	}
 	return 0
 }
 
-func (c *MonitorCommand) doDisplayBoxMonitoring(client *Client, conf *config.Configuration) {
-	c.UI.Info(fmt.Sprintf("Display box provider statistics: %s", client.Provider.Description()))
-	log.Printf("[DEBUG] Skybox box provider: %v", client.Provider)
-	client.Provider.Setup(conf)
-	client.Provider.Authenticate()
-	resp, err := client.Provider.Statistics()
+func (c *MonitorCommand) doDisplayBoxMonitoring(agent *Agent, conf *config.Configuration) {
+	c.UI.Info(fmt.Sprintf("Display box provider statistics: %s", agent.Provider.Description()))
+	log.Printf("[DEBUG] Skybox box provider: %v", agent.Provider)
+	agent.Provider.Setup(conf)
+	agent.Provider.Authenticate()
+	resp, err := agent.Provider.Statistics()
 	if err != nil {
 		c.UI.Error(err.Error())
 		return
@@ -116,11 +118,43 @@ func (c *MonitorCommand) doDisplayBoxMonitoring(client *Client, conf *config.Con
 	c.UI.Output(fmt.Sprintf("Box provider statistics successfully retrieve"))
 }
 
-func (c *MonitorCommand) doBoxMonitoring(client *Client, conf *config.Configuration) {
-	c.UI.Info(fmt.Sprintf("Display box provider statistics: %s", client.Provider.Description()))
-	log.Printf("[DEBUG] Skybox box provider: %v", client.Provider)
-	client.Provider.Setup(conf)
-	client.Provider.Authenticate()
-	client.Provider.Statistics()
-	c.UI.Output(fmt.Sprintf("Box provider statistics successfully retrieve"))
+func (c *MonitorCommand) doBoxMonitoring(agent *Agent, conf *config.Configuration) {
+	c.UI.Info(fmt.Sprintf("Display box provider statistics: %s", agent.Provider.Description()))
+	log.Printf("[DEBUG] Skybox box provider: %v", agent.Provider)
+	agent.Provider.Setup(conf)
+	agent.Provider.Authenticate()
+	agent.Output.Setup(conf)
+	agent.Output.Connect()
+	tick := time.Tick(time.Second * time.Duration(conf.Interval))
+	for _ = range tick {
+		resp, err := agent.Provider.Statistics()
+		if err != nil {
+			fmt.Printf("Error with box statistics: %s\n", err.Error())
+			continue
+		}
+		fmt.Printf("Rate: [Up/Down]: %d / %d\n",
+			resp.RateUp, resp.RateDown)
+		fmt.Printf("Bytes: [Up/Down]: %d / %d\n",
+			resp.BytesUp, resp.BytesDown)
+		fmt.Printf("Bandwidth: [Up/Down]: %d / %d\n",
+			resp.BandwidthUp, resp.BandwidthDown)
+
+		var points []*client.Point
+		tags := map[string]string{"rate": "rate-up-down"}
+		fields := map[string]interface{}{
+			"up":   resp.RateUp,
+			"down": resp.RateDown,
+		}
+		pt, err := client.NewPoint("rate", tags, fields, time.Now())
+		if err != nil {
+			fmt.Printf("Error creating statistics for output: %s\n", err.Error())
+			continue
+		}
+		points = append(points, pt)
+		err = agent.Output.Write(points)
+		if err != nil {
+			fmt.Printf("Error writing statistics : %s\n", err.Error())
+			continue
+		}
+	}
 }

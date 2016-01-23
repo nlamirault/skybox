@@ -78,36 +78,57 @@ func (c *CheckCommand) Run(args []string) int {
 		c.UI.Error(err.Error())
 		return 1
 	}
-	client, err := NewClient(conf)
+	agent, err := NewAgent(conf)
 	if err != nil {
 		c.UI.Error(err.Error())
 		return 1
 	}
-	log.Printf("[DEBUG] Skybox Client: %s", client)
+	log.Printf("[DEBUG] Skybox Client: %s", agent)
 
 	action := args[0]
 	switch action {
 	case "box":
-		c.doCheckBoxProvider(client, conf)
+		c.doCheckBoxProvider(agent, conf)
 	case "output":
-		c.doCheckOutputPlugin(client, conf)
+		c.doCheckOutputPlugin(agent, conf)
 	default:
 		f.Usage()
 	}
 	return 0
 }
 
-func (c *CheckCommand) doCheckBoxProvider(client *Client, conf *config.Configuration) {
-	c.UI.Info(fmt.Sprintf("Check box provider: %s", client.Provider.Description()))
-	log.Printf("[DEBUG] Skybox box provider: %v", client.Provider)
-	client.Provider.Setup(conf)
-	client.Provider.Ping()
-	client.Provider.Authenticate()
+func (c *CheckCommand) doCheckBoxProvider(agent *Agent, conf *config.Configuration) {
+	c.UI.Info(fmt.Sprintf("Check box provider: %s", agent.Provider.Description()))
+	log.Printf("[DEBUG] Skybox box provider: %v", agent.Provider)
+	if err := agent.Provider.Setup(conf); err != nil {
+		c.UI.Error(err.Error())
+		return
+	}
+	if err := agent.Provider.Ping(); err != nil {
+		c.UI.Error(err.Error())
+		return
+	}
+	if err := agent.Provider.Authenticate(); err != nil {
+		c.UI.Error(err.Error())
+		return
+	}
 	c.UI.Output(fmt.Sprintf("Box provider successfully configured"))
 }
 
-func (c *CheckCommand) doCheckOutputPlugin(client *Client, conf *config.Configuration) {
-	c.UI.Info(fmt.Sprintf("Check output plugin: %s", client.Output.Description()))
-	log.Printf("[DEBUG] Skybox output plugin: %v", client.Output)
+func (c *CheckCommand) doCheckOutputPlugin(agent *Agent, conf *config.Configuration) {
+	c.UI.Info(fmt.Sprintf("Check output plugin: %s", agent.Output.Description()))
+	log.Printf("[DEBUG] Skybox output plugin: %v", agent.Output)
+	if err := agent.Output.Setup(conf); err != nil {
+		c.UI.Error(err.Error())
+		return
+	}
+	if err := agent.Output.Connect(); err != nil {
+		c.UI.Error(err.Error())
+		return
+	}
+	if err := agent.Output.Ping(); err != nil {
+		c.UI.Error(err.Error())
+		return
+	}
 	c.UI.Output(fmt.Sprintf("Output plugin successfully configured"))
 }

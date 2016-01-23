@@ -22,29 +22,33 @@ import (
 
 // Configuration holds configuration for Skybox.
 type Configuration struct {
+	// Interval is the default time pause between sending data
+	Interval int `toml:"interval"`
+
 	// BoxProvider is the name of the box provider
-	BoxProvider string
+	BoxProvider string `toml:"box"`
 	// OutputPlugin is the name of the output plugin to store data
-	OutputPlugin string
+	OutputPlugin string `toml:"output"`
 
 	// Debug is the option for running in debug mode
-	Debug bool
+	Debug bool `toml:"interval"`
 
-	Freebox *FreeboxConfiguration
+	Freebox *FreeboxConfiguration `toml:"freebox"`
 
-	InfluxDB *InfluxdbConfiguration
+	InfluxDB *InfluxdbConfiguration `toml:"influxdb"`
 }
 
 // New returns a Configuration with default values
 func New() *Configuration {
 	return &Configuration{
+		Interval:     5,
 		OutputPlugin: "influxdb",
 		BoxProvider:  "freebox",
 		Freebox: &FreeboxConfiguration{
 			URL: "http://mafreebox.freebox.fr",
 		},
 		InfluxDB: &InfluxdbConfiguration{
-			Host:     "localhost:8086",
+			URL:      "http://localhost:8086",
 			Username: "admin",
 			Password: "admin"},
 	}
@@ -75,7 +79,9 @@ type FreeboxConfiguration struct {
 
 // InfluxdbConfiguration defines the configuration for AWS KMS provider
 type InfluxdbConfiguration struct {
-	Host     string `toml:"host"`
-	Username string `toml:"username"`
-	Password string `toml:"password"`
+	URL             string `toml:"url"`
+	Username        string `toml:"username"`
+	Password        string `toml:"password"`
+	Database        string `toml:"database"`
+	RetentionPolicy string `toml:"retentionPolicy"`
 }

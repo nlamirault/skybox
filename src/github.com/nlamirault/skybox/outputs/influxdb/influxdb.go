@@ -16,9 +16,11 @@ package influxdb
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/influxdata/influxdb/client/v2"
 
+	"github.com/nlamirault/skybox/config"
 	"github.com/nlamirault/skybox/outputs"
 	"github.com/nlamirault/skybox/version"
 )
@@ -31,30 +33,73 @@ func init() {
 }
 
 type InfluxDB struct {
-	URL        string
-	URLs       []string `toml:"urls"`
-	Username   string
-	Password   string
-	Database   string
-	UserAgent  string
+	URL       string
+	URLs      []string `toml:"urls"`
+	Username  string
+	Password  string
+	Database  string
+	UserAgent string
+	Client    client.Client
+
 	Precision  string
 	UDPPayload int `toml:"udp_payload"`
-	conns      []client.Client
 }
 
 // New returns a InfluxDB Client
 func New() *InfluxDB {
-	client := InfluxDB{
-		URL:       "http://localhost:8086",
-		Username:  "admin",
-		Password:  "admin",
-		Database:  "skybox",
+	return &InfluxDB{
 		UserAgent: fmt.Sprintf("skybox-influxdb-%s", version.Version),
 	}
-	return &client
+}
+
+func (i *InfluxDB) Setup(config *config.Configuration) error {
+	if config.InfluxDB == nil {
+		return fmt.Errorf("InfluxDB configuration not found: %v", config)
+	}
+	i.URL = config.InfluxDB.URL
+	i.Username = config.InfluxDB.Username
+	i.Password = config.InfluxDB.Password
+	i.Database = config.InfluxDB.Database
+	log.Printf("[DEBUG] InfluxDB output: %v", i)
+	return nil
+}
+
+func (i *InfluxDB) Ping() error {
+	if i.Client == nil {
+		return fmt.Errorf("InfluxDB Client not configured")
+	}
+	resp, err := i.Client.Query(client.Query{
+		Command: fmt.Sprintf("SHOW DATABASES"),
+	})
+	if err != nil {
+		return err
+	}
+	log.Printf("[DEBUG] InfluxDB Check database response: %v", resp)
+	return nil
 }
 
 func (i *InfluxDB) Connect() error {
+	log.Printf("[DEBUG] InfluxDB Connect: %v", i)
+	c, err := client.NewHTTPClient(client.HTTPConfig{
+		Addr:      i.URL,
+		Username:  i.Username,
+		Password:  i.Password,
+		UserAgent: i.UserAgent,
+		//Timeout:   5,
+	})
+	if err != nil {
+		return err
+	}
+	// Create Database if it doesn't exist
+	log.Printf("[DEBUG] InfluxDB Create database if not exists")
+	resp, err := c.Query(client.Query{
+		Command: fmt.Sprintf("CREATE DATABASE IF NOT EXISTS %s", i.Database),
+	})
+	if err != nil {
+		return err
+	}
+	log.Printf("[DEBUG] InfluxDB connect response: %v", resp)
+	i.Client = c
 	return nil
 }
 
@@ -67,5 +112,17 @@ func (i *InfluxDB) Description() string {
 }
 
 func (i *InfluxDB) Write(points []*client.Point) error {
+	log.Printf("[DEBUG] InfluxDB Make points")
+	bp, _ := client.NewBatchPoints(client.BatchPointsConfig{
+		Database:  i.Database,
+		Precision: "s",
+	})
+
+	for _, point := range points {
+		bp.AddPoint(point)
+	}
+	log.Printf("[DEBUG] InfluxDB Write points")
+	// Write the batch
+	i.Client.Write(bp)
 	return nil
 }
