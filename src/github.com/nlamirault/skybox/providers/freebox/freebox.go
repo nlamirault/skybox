@@ -21,7 +21,6 @@ import (
 	"log"
 	"net/http"
 	"net/url"
-	"os"
 
 	"github.com/nlamirault/skybox/config"
 	"github.com/nlamirault/skybox/providers"
@@ -66,9 +65,6 @@ func New() *Client {
 		Name:       "Skybox",
 		Version:    fmt.Sprintf("%s", version.Version),
 		DeviceName: "Skybox",
-	}
-	if os.Getenv("SKYBOX_FREEBOX_TOKEN") != "" {
-		client.Token = os.Getenv("SKYBOX_FREEBOX_TOKEN")
 	}
 	return &client
 }
