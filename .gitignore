@@ -1,5 +1,6 @@
 # Emacs
 *~
+.projectile
 
 # Golang
-bin/daredevil
+bin/skybox

@@ -24,7 +24,24 @@ You can download the binaries :
 
 Skybox configuration use [toml][] format. File is located into `$HOME/.config/skybox/skybox.toml`.
 
+## Usage
 
+### Freebox
+
+    $ skybox check box
+
+*skybox* will ask for an `app_token` using the API. A message will be displayed on
+the Freebox LCD asking the user to grant/deny access to the requesting app.
+
+Once the app has obtained a valid `app_token`, edit your configuration file, and setup this token into the
+specific entry:
+
+```toml
+[freebox]
+url= "http://mafreebox.freebox.fr/"
+token = "...."
+```
+    $ skybox check box
 
 ## Development
 
@@ -35,6 +52,14 @@ Skybox configuration use [toml][] format. File is located into `$HOME/.config/sk
 * Build tool :
 
         $ make build
+
+* Start outputs :
+
+        $ docker run -d \
+            -p 8083:8083 -p 8086:8086
+            -e PRE_CREATE=skybox \
+            --name influxdb \
+            tutum/influxdb:0.9
 
 * Launch unit tests :
 
