@@ -25,7 +25,7 @@ import (
 )
 
 const (
-	defaultURL = "http://mafreebox.free.fr/"
+	defaultURL = "http://mafreebox.free.fr"
 
 	apiVersion = "3"
 
