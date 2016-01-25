@@ -22,6 +22,7 @@ import (
 
 	_ "github.com/nlamirault/skybox/outputs/influxdb"
 	_ "github.com/nlamirault/skybox/providers/freebox"
+	_ "github.com/nlamirault/skybox/providers/livebox"
 	"github.com/nlamirault/skybox/version"
 )
 

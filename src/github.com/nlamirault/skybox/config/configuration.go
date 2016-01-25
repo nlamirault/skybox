@@ -33,8 +33,11 @@ type Configuration struct {
 	// Debug is the option for running in debug mode
 	Debug bool `toml:"interval"`
 
+	// Providers
 	Freebox *FreeboxConfiguration `toml:"freebox"`
+	Livebox *LiveboxConfiguration `toml:"livebox"`
 
+	// Outputs
 	InfluxDB *InfluxdbConfiguration `toml:"influxdb"`
 }
 
@@ -71,10 +74,17 @@ func LoadFileConfig(file string) (*Configuration, error) {
 	return configuration, nil
 }
 
-// FreeboxProviderConfiguration defines the configuration for the Freebox provider
+// FreeboxConfiguration defines the configuration for the Freebox provider
 type FreeboxConfiguration struct {
 	URL   string `toml:"url"`
 	Token string `toml:"token"`
+}
+
+// LiveboxConfiguration defines the configuration for the Livebox provider
+type LiveboxConfiguration struct {
+	URL      string `toml:"url"`
+	Username string `toml:"username"`
+	Password string `toml:"password"`
 }
 
 // InfluxdbConfiguration defines the configuration for AWS KMS provider
