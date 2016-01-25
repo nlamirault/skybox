@@ -14,35 +14,54 @@
 
 package freebox
 
+import (
+	"crypto/hmac"
+	"crypto/sha1"
+	"encoding/json"
+	"fmt"
+	"log"
+
+	"github.com/nlamirault/skybox/providers"
+)
+
 const (
-	FreeboxAPIVersion string = "v3"
+	defaultURL = "http://mafreebox.free.fr/"
+
+	apiVersion = "3"
 
 	// API Errors code
 
 	// Invalid session token, or not session token sent
-	AuthRequiredError string = "auth_required"
+	authRequiredError string = "auth_required"
 	// The app token you are trying to use is invalid or has been revoked
-	InvalidToken string = "invalid_token"
+	invalidToken string = "invalid_token"
 	// The app token you are trying to use has not been validated by user yet
-	PendingToken string = "pending_token"
+	pendingToken string = "pending_token"
 	// Your app permissions does not allow accessing this API
-	InsufficientRights string = "insufficient_rights"
+	insufficientRights string = "insufficient_rights"
 	// You are trying to get an app_token from a remote IP
-	DeniedFromExternalIP string = "denied_from_external_ip"
+	deniedFromExternalIP string = "denied_from_external_ip"
 	// Your request is invalid
-	InvalidRequest string = "invalid_request"
+	invalidRequest string = "invalid_request"
 	// Too many auth error have been made from your IP
-	RateLimited string = "ratelimited"
+	rateLimited string = "ratelimited"
 	// New application token request has been disabled
-	NewAppsDenied string = "new_apps_denied"
+	newAppsDenied string = "new_apps_denied"
 	// API access from apps has been disabled
-	AppsDenied string = "apps_denied"
+	appsDenied string = "apps_denied"
 	// Internal error
-	InternalError string = "internal_error"
+	internalError string = "internal_error"
 )
 
-// APIVersionResponse is returned by requesting `GET /api_version`
-type APIVersionResponse struct {
+type apiErrorResponse struct {
+	UID       string `json:"uid"`
+	Message   string `json:"msg"`
+	Success   bool   `json:"success"`
+	ErrorCode string `json:"error_code"`
+}
+
+// apiVersionResponse is returned by requesting `GET /api_version`
+type apiVersionResponse struct {
 	FreeboxID  string `json:"uid"`
 	DeviceName string `json:"device_name"`
 	Version    string `json:"api_version"`
@@ -50,23 +69,28 @@ type APIVersionResponse struct {
 	DeviceType string `json:"device_type"`
 }
 
-type APIErrorResponse struct {
-	UID       string `json:"uid"`
-	Message   string `json:"msg"`
-	Success   bool   `json:"success"`
-	ErrorCode string `json:"error_code"`
+func (c *Client) version() (*apiVersionResponse, error) {
+	var resp *apiVersionResponse
+	err := providers.Do(
+		c,
+		"GET",
+		fmt.Sprintf("%s/api_version", c.EndPoint()),
+		nil,
+		&resp)
+	log.Printf("[DEBUG] FreeboxAPI version response: %v", resp)
+	return resp, err
 }
 
-// APIAuthorizeRequest is sent by requesting `POST /api/v3/login/authorize/`
-type APIAuthorizeRequest struct {
+// apiAuthorizeRequest is sent by requesting `POST /api/v3/login/authorize/`
+type apiAuthorizeRequest struct {
 	AppID      string `json:"app_id"`
 	AppName    string `json:"app_name"`
 	AppVersion string `json:"app_version"`
 	DeviceName string `json:"device_name"`
 }
 
-// APIAuthorizeResponse is returned by requesting `POST /api/v3/login/authorize/`
-type APIAuthorizeResponse struct {
+// apiAuthorizeResponse is returned by requesting `POST /api/v3/login/authorize/`
+type apiAuthorizeResponse struct {
 	Success bool `json:"success"`
 	Result  struct {
 		AppToken string `json:"app_token"`
@@ -74,8 +98,29 @@ type APIAuthorizeResponse struct {
 	}
 }
 
-// APIConnectionStatusResponse is returned by requesting `GET /api/v3/connection/`
-type APIConnectionStatusResponse struct {
+func (c *Client) authorize() (*apiAuthorizeResponse, error) {
+	log.Printf("[DEBUG] FreeboxAPI retrieve authorization\n")
+	var resp *apiAuthorizeResponse
+	err := providers.Do(
+		c,
+		"POST",
+		c.getFreeboxAPIRequest("login/authorize"),
+		apiAuthorizeRequest{
+			AppID:      c.Identifier,
+			AppName:    c.Name,
+			AppVersion: c.Version,
+			DeviceName: c.DeviceName,
+		},
+		&resp)
+	if err != nil {
+		return nil, err
+	}
+	log.Printf("[DEBUG] FreeboxAPI Authorize response: %v", resp)
+	return resp, nil
+}
+
+// apiConnectionStatusResponse is returned by requesting `GET /api/v3/connection/`
+type apiConnectionStatusResponse struct {
 	Success bool `json:"success"`
 	Result  struct {
 		// ehernet FTTH, or rfc2684 xDSL (unbundled), or pppoatm xDSL
@@ -103,18 +148,123 @@ type APIConnectionStatusResponse struct {
 	}
 }
 
-type APILoginRequest struct {
+func (c *Client) connectionStatus() (*apiConnectionStatusResponse, error) {
+	log.Printf("[DEBUG] FreeboxAPI connection status\n")
+	var resp *apiConnectionStatusResponse
+	err := providers.Do(
+		c,
+		"GET",
+		c.getFreeboxAPIRequest("connection"),
+		nil,
+		&resp)
+	if err != nil {
+		return nil, err
+	}
+	log.Printf("[DEBUG] FreeboxAPI connection status response: %v", resp)
+	return resp, nil
+}
+
+type apiLoginResponse struct {
+	Success bool `json:"success"`
+	Result  struct {
+		Challenge string `json:"challenge"`
+		LoggedIn  bool   `json:"logged_in"`
+	} `json:"result"`
+}
+
+func (c *Client) login() (*apiLoginResponse, error) {
+	log.Printf("[DEBUG] FreeboxAPI login\n")
+	var resp *apiLoginResponse
+	err := providers.Do(
+		c,
+		"GET",
+		c.getFreeboxAPIRequest("login"),
+		nil,
+		&resp)
+	if err != nil {
+		return nil, err
+	}
+	c.Challenge = resp.Result.Challenge
+	log.Printf("[DEBUG] FreeboxAPI login response: %v", resp)
+	return resp, nil
+}
+
+type apiLoginSessionRequest struct {
 	AppID      string `json:"app_id"`
 	AppVersion string `json:"app_version"`
 	Password   string `json:"password"`
 }
 
-type APILoginResponse struct {
+type apiLoginSessionResponse struct {
 	Success bool `json:"success"`
 	Result  struct {
-		SessionToken string          `json:"session_token"`
-		Challenge    string          `json:"challenge"`
-		PasswordSalt string          `json:""`
-		Permissions  map[string]bool `json:""`
+		SessionToken string `json:"session_token"`
+		Challenge    string `json:"challenge"`
+		PasswordSalt string `json:""`
+		Permissions  struct {
+			Settings   bool `json:"settings"`
+			Contacts   bool `json:"contacts"`
+			Calls      bool `json:"calls"`
+			Explorer   bool `json:"explorer"`
+			Downloader bool `json:"downloader"`
+			Parental   bool `json:"parental"`
+			Pvr        bool `json:"pvr"`
+		}
 	} `json:"result"`
+}
+
+func (c *Client) openSession() (*apiLoginSessionResponse, error) {
+	log.Printf("[DEBUG] FreeboxAPI open session\n")
+	hash := hmac.New(sha1.New, []byte(c.Token))
+	hash.Write([]byte(c.Challenge))
+	c.Password = fmt.Sprintf("%x", hash.Sum(nil))
+	var resp *apiLoginSessionResponse
+	err := providers.Do(
+		c,
+		"POST",
+		c.getFreeboxAPIRequest("login/session"),
+		apiLoginSessionRequest{
+			AppID:      c.Identifier,
+			AppVersion: c.Version,
+			Password:   c.Password,
+		},
+		&resp)
+	if err != nil {
+		return nil, err
+	}
+	log.Printf("[DEBUG] FreeboxAPI open session response: %v", resp)
+	c.SessionToken = resp.Result.SessionToken
+	return resp, nil
+}
+
+type apiLogoutSessionResponse struct {
+	Success bool `json:"success"`
+}
+
+func (c *Client) closeSession() (*apiLogoutSessionResponse, error) {
+	var resp *apiLogoutSessionResponse
+	err := providers.Do(
+		c,
+		"POST",
+		fmt.Sprintf("%s/login/logout", c.EndPoint()),
+		nil,
+		&resp)
+	if err != nil {
+		return nil, err
+	}
+	log.Printf("[DEBUG] FreeboxAPI close session response: %v", resp)
+	c.SessionToken = ""
+	return resp, err
+}
+
+func (c *Client) getFreeboxAPIRequest(request string) string {
+	return fmt.Sprintf("%s/api/v%s/%s", c.Endpoint, apiVersion, request)
+}
+
+func makeAPIErrorResponse(e error) (*apiErrorResponse, error) {
+	var resp *apiErrorResponse
+	if err := json.Unmarshal([]byte(e.(*providers.APIError).Message), &resp); err != nil {
+		return nil, err
+	}
+	return resp, nil
 }

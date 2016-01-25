@@ -15,9 +15,6 @@
 package freebox
 
 import (
-	"crypto/hmac"
-	"crypto/sha1"
-	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
@@ -26,11 +23,6 @@ import (
 	"github.com/nlamirault/skybox/config"
 	"github.com/nlamirault/skybox/providers"
 	"github.com/nlamirault/skybox/version"
-)
-
-const (
-	DefaultURL = "http://mafreebox.free.fr/"
-	APIVersion = "3"
 )
 
 func init() {
@@ -58,7 +50,7 @@ type Client struct {
 
 // New returns a Freebox Client
 func New() *Client {
-	baseURL, _ := url.Parse(DefaultURL)
+	baseURL, _ := url.Parse(defaultURL)
 	client := Client{
 		Client:     &http.Client{},
 		Endpoint:   baseURL,
@@ -106,76 +98,62 @@ func (c *Client) Setup(config *config.Configuration) error {
 
 // Ping contact the Freebox server, and check the API version
 func (c *Client) Ping() error {
-	var resp *APIVersionResponse
-	err := providers.Do(
-		c,
-		"GET",
-		fmt.Sprintf("%s/api_version", c.EndPoint()),
-		nil,
-		&resp)
+	_, err := c.version()
 	if err != nil {
 		return err
 	}
-	log.Printf("[DEBUG] Freebox Ping response: %s", resp)
+	log.Printf("[DEBUG] Freebox Ping received")
 	return nil
 }
+
 func (c *Client) Authenticate() error {
 	if c.Token == "" {
-		err := c.authorize()
+		_, err := c.authorize()
 		if err != nil {
 			return err
 		}
+		log.Printf("[DEBUG] Freebox authentication done")
 		return nil
 	}
-	err := c.login()
+	_, err := c.login()
 	if err != nil {
 		return err
 	}
+	_, err = c.login()
+	if err != nil {
+		return err
+	}
+	log.Printf("[DEBUG] Freebox login done")
+	if c.SessionToken == "" {
+		_, err = c.openSession()
+		if err != nil {
+			return err
+		}
+	}
+	log.Printf("[DEBUG] Freebox open session done")
 	return err
 
-}
-func (c *Client) authorize() error {
-	log.Printf("[DEBUG] Freebox retrieve authorization\n")
-	var resp *APIAuthorizeResponse
-	err := providers.Do(
-		c,
-		"POST",
-		c.getFreeboxAPIRequest("login/authorize"),
-		APIAuthorizeRequest{
-			AppID:      c.Identifier,
-			AppName:    c.Name,
-			AppVersion: c.Version,
-			DeviceName: c.DeviceName,
-		},
-		&resp)
-	if err != nil {
-		return err
-	}
-	log.Printf("[DEBUG] Freebox Authorize response: %s", resp)
-	return nil
 }
 
 func (c *Client) Statistics() (*providers.ProviderConnectionStatistics, error) {
 	log.Printf("[DEBUG] Freebox retrieve statistics\n")
-	var resp *APIConnectionStatusResponse
-	err := providers.Do(
-		c,
-		"GET",
-		c.getFreeboxAPIRequest("connection"),
-		nil,
-		&resp)
+	resp, err := c.connectionStatus()
 	if err != nil {
 		apiError, err := makeAPIErrorResponse(err)
 		if err != nil {
 			return nil, err
 		}
-		if apiError.ErrorCode == AuthRequiredError {
-			c.openSession()
+		if apiError.ErrorCode == authRequiredError {
+			c.SessionToken = ""
+			_, err := c.openSession()
+			if err != nil {
+				return nil, err
+			}
 			c.Statistics()
 		}
 		return nil, err
 	}
-	log.Printf("[DEBUG] Freebox connection status response: %s", resp)
+	log.Printf("[DEBUG] Freebox connection status received")
 	return &providers.ProviderConnectionStatistics{
 		RateDown:      resp.Result.RateDown,
 		RateUp:        resp.Result.RateUp,
@@ -184,62 +162,4 @@ func (c *Client) Statistics() (*providers.ProviderConnectionStatistics, error) {
 		BandwidthDown: resp.Result.BandwidthDown,
 		BandwidthUp:   resp.Result.BandwidthUp,
 	}, nil
-}
-
-func (c *Client) login() error {
-	log.Printf("[DEBUG] Freebox login\n")
-	if c.Token == "" {
-		return fmt.Errorf("No Freebox token found.")
-	}
-	var resp *APILoginResponse
-	err := providers.Do(
-		c,
-		"GET",
-		c.getFreeboxAPIRequest("login"),
-		nil,
-		&resp)
-	if err != nil {
-		return err
-	}
-	log.Printf("[DEBUG] Freebox login response: %s", resp)
-	c.Challenge = resp.Result.Challenge
-	if c.SessionToken == "" {
-		c.openSession()
-	}
-	return nil
-}
-
-func (c *Client) openSession() error {
-	log.Printf("[DEBUG] Freebox open session\n")
-	hash := hmac.New(sha1.New, []byte(c.Token))
-	hash.Write([]byte(c.Challenge))
-	c.Password = fmt.Sprintf("%x", hash.Sum(nil))
-	var resp *APILoginResponse
-	err := providers.Do(
-		c,
-		"POST",
-		c.getFreeboxAPIRequest("login/session"),
-		APILoginRequest{
-			AppID:      c.Identifier,
-			AppVersion: c.Version,
-			Password:   c.Password,
-		},
-		&resp)
-	if err != nil {
-		return err
-	}
-	c.SessionToken = resp.Result.SessionToken
-	return nil
-}
-
-func (c *Client) getFreeboxAPIRequest(request string) string {
-	return fmt.Sprintf("%s/api/v%s/%s", c.Endpoint, APIVersion, request)
-}
-
-func makeAPIErrorResponse(e error) (*APIErrorResponse, error) {
-	var resp *APIErrorResponse
-	if err := json.Unmarshal([]byte(e.(*providers.APIError).Message), &resp); err != nil {
-		return nil, err
-	}
-	return resp, nil
 }
