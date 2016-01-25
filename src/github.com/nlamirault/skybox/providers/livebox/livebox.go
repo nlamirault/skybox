@@ -39,6 +39,7 @@ type Client struct {
 	ContextID string
 	Username  string
 	Password  string
+	Cookies   []*http.Cookie
 }
 
 // New returns a Freebox Client
@@ -72,6 +73,11 @@ func (c *Client) SetupHeaders(request *http.Request) {
 	request.Header.Add("X-Context", c.ContextID)
 	request.Header.Add("X-Sah-Request-Type", "idle")
 	request.Header.Add("X-Requested-With", "XMLHttpRequest")
+	if c.Cookies != nil {
+		for _, cookie := range c.Cookies {
+			request.AddCookie(cookie)
+		}
+	}
 }
 
 func (c *Client) Setup(config *config.Configuration) error {

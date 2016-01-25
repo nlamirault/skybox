@@ -25,13 +25,31 @@ const (
 	defaultURL = "http://192.168.1.1"
 )
 
+type apiErrorEntryResponse struct {
+	ErrorCode   int    `json:"error"`
+	Description string `json:"description"`
+	Info        string `json:"info"`
+}
+
+type apiErrorResponse struct {
+	Result struct {
+		Status struct {
+			Errors []apiErrorEntryResponse
+		}
+	}
+}
+
 type apiAuthenticateResponse struct {
+	Status int `json:"status"`
+	Data   struct {
+		ContextID string `json:"contextID"`
+	}
 }
 
 func (c *Client) authenticate() (*apiAuthenticateResponse, error) {
 	log.Printf("[DEBUG] LiveboxAPI authenticate\n")
 	var resp *apiAuthenticateResponse
-	err := providers.Do(
+	cookies, err := providers.Do(
 		c,
 		"POST",
 		fmt.Sprintf("/authenticate?username=%s&password=%s",
@@ -41,6 +59,8 @@ func (c *Client) authenticate() (*apiAuthenticateResponse, error) {
 	if err != nil {
 		return nil, err
 	}
+	c.Cookies = cookies
+	c.ContextID = resp.Data.ContextID
 	return resp, nil
 }
 
@@ -50,7 +70,7 @@ type apiDisconnectResponse struct {
 func (c *Client) disconnect() (*apiDisconnectResponse, error) {
 	log.Printf("[DEBUG] LiveboxAPI Disconnect\n")
 	var resp *apiDisconnectResponse
-	err := providers.Do(
+	_, err := providers.Do(
 		c,
 		"POST",
 		fmt.Sprintf("/logout"),
@@ -100,7 +120,7 @@ type apiConnectionStatusResponse struct {
 func (c *Client) connectionStatus() (*apiConnectionStatusResponse, error) {
 	log.Printf("[DEBUG] LiveboxAPI retrieve MIBs\n")
 	var resp *apiConnectionStatusResponse
-	err := providers.Do(
+	_, err := providers.Do(
 		c,
 		"POST",
 		c.getLiveboxAPIRequest("NeMo/Intf/data:getMIBs"),

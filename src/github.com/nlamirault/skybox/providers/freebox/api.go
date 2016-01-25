@@ -71,7 +71,7 @@ type apiVersionResponse struct {
 
 func (c *Client) version() (*apiVersionResponse, error) {
 	var resp *apiVersionResponse
-	err := providers.Do(
+	_, err := providers.Do(
 		c,
 		"GET",
 		fmt.Sprintf("%s/api_version", c.EndPoint()),
@@ -101,7 +101,7 @@ type apiAuthorizeResponse struct {
 func (c *Client) authorize() (*apiAuthorizeResponse, error) {
 	log.Printf("[DEBUG] FreeboxAPI retrieve authorization\n")
 	var resp *apiAuthorizeResponse
-	err := providers.Do(
+	_, err := providers.Do(
 		c,
 		"POST",
 		c.getFreeboxAPIRequest("login/authorize"),
@@ -151,7 +151,7 @@ type apiConnectionStatusResponse struct {
 func (c *Client) connectionStatus() (*apiConnectionStatusResponse, error) {
 	log.Printf("[DEBUG] FreeboxAPI connection status\n")
 	var resp *apiConnectionStatusResponse
-	err := providers.Do(
+	_, err := providers.Do(
 		c,
 		"GET",
 		c.getFreeboxAPIRequest("connection"),
@@ -175,7 +175,7 @@ type apiLoginResponse struct {
 func (c *Client) login() (*apiLoginResponse, error) {
 	log.Printf("[DEBUG] FreeboxAPI login\n")
 	var resp *apiLoginResponse
-	err := providers.Do(
+	_, err := providers.Do(
 		c,
 		"GET",
 		c.getFreeboxAPIRequest("login"),
@@ -219,7 +219,7 @@ func (c *Client) openSession() (*apiLoginSessionResponse, error) {
 	hash.Write([]byte(c.Challenge))
 	c.Password = fmt.Sprintf("%x", hash.Sum(nil))
 	var resp *apiLoginSessionResponse
-	err := providers.Do(
+	_, err := providers.Do(
 		c,
 		"POST",
 		c.getFreeboxAPIRequest("login/session"),
@@ -243,7 +243,7 @@ type apiLogoutSessionResponse struct {
 
 func (c *Client) closeSession() (*apiLogoutSessionResponse, error) {
 	var resp *apiLogoutSessionResponse
-	err := providers.Do(
+	_, err := providers.Do(
 		c,
 		"POST",
 		fmt.Sprintf("%s/login/logout", c.EndPoint()),

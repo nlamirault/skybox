@@ -92,25 +92,25 @@ func (a *APIError) Error() string {
 // body is used for the content of the request
 // result contains the JSON decoded response
 // apiError contains the JSON error response if HTTP status code isn't OK.
-func Do(provider Provider, method, urlStr string, body interface{}, result interface{}) error {
+func Do(provider Provider, method, urlStr string, body interface{}, result interface{}) ([]*http.Cookie, error) {
 	resp, err := performRequest(provider, method, urlStr, body)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode == http.StatusOK {
-		return decodeResponse(resp, result)
+		return nil, decodeResponse(resp, result)
 	}
 	content, err := getResponseBody(resp)
 	if err != nil {
-		return fmt.Errorf("Can't read HTTP Error : %s", err.Error())
+		return nil, fmt.Errorf("Can't read HTTP Error : %s", err.Error())
 	}
 	apiError := APIError{
 		StatusCode: resp.StatusCode,
 		Message:    content,
 	}
 	log.Printf("[DEBUG] HTTP Error: %v\n", apiError)
-	return &apiError
+	return nil, &apiError
 }
 
 func decodeResponse(resp *http.Response, v interface{}) error {
