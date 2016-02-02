@@ -12,6 +12,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// Orange Livebox API
+
+// http://192.168.1.1/sysbus/Wificom:getStatus
+
+// http://192.168.1.1/sysbus/NeMo/Intf/dsl0:getDSLStats
+// http://192.168.1.1/sysbus/NeMo/Intf/data:getMIBs
+// http://192.168.1.1/sysbus/NeMo/Intf/lan:getMIBs
+// http://192.168.1.1/sysbus/NeMo/Intf/lan:luckyAddrAddress
+// http://192.168.1.1/sysbus/NeMo/Intf/data:luckyAddrAddress
+
+// http://192.168.1.1/sysbus/UserManagement:getUsers
+
+// http://192.168.1.1/sysbus/NMC:getWANStatus : status wan
+// http://192.168.1.1/sysbus/NMC/OrangeTV:getIPTVStatus : status TV
+
+// http://192.168.1.1/sysbus/VoiceService/VoiceApplication:listTrunks
+
 package livebox
 
 import (
@@ -32,9 +49,7 @@ func init() {
 
 // Client is the Livebox API client
 type Client struct {
-	// The HTTP client to use when sending requests.
-	Client *http.Client
-	// Endpoint is the base URL for API requests.
+	Client    *http.Client
 	Endpoint  *url.URL
 	ContextID string
 	Username  string
@@ -42,7 +57,7 @@ type Client struct {
 	Cookies   []*http.Cookie
 }
 
-// New returns a Freebox Client
+// New returns a Livebox Client
 func New() *Client {
 	baseURL, _ := url.Parse(defaultURL)
 	client := Client{
