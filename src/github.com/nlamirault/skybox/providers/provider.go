@@ -21,10 +21,13 @@ import (
 	"github.com/nlamirault/skybox/config"
 )
 
+// Creator return a new Provider
 type Creator func() Provider
 
+// Providers defines all available box providers
 var Providers = map[string]Creator{}
 
+// Add define a new box provider to the available providers
 func Add(name string, creator Creator) {
 	Providers[name] = creator
 }
@@ -57,6 +60,7 @@ type Provider interface {
 	Statistics() (*ProviderConnectionStatistics, error)
 }
 
+// ProviderConnectionStatistics represents commons statistics for box provider
 type ProviderConnectionStatistics struct {
 	// current download rate in byte/s
 	RateDown int `json:"rate_down"`

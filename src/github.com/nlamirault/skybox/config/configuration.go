@@ -46,10 +46,10 @@ func New() *Configuration {
 	return &Configuration{
 		Interval:     5,
 		OutputPlugin: "influxdb",
-		BoxProvider:  "freebox",
-		Freebox: &FreeboxConfiguration{
-			URL: "http://mafreebox.freebox.fr",
-		},
+		// BoxProvider:  "freebox",
+		// Freebox: &FreeboxConfiguration{
+		// 	URL: "http://mafreebox.freebox.fr",
+		// },
 		InfluxDB: &InfluxdbConfiguration{
 			URL:      "http://localhost:8086",
 			Username: "admin",
@@ -67,6 +67,11 @@ func LoadFileConfig(file string) (*Configuration, error) {
 	log.Printf("[DEBUG] Configuration : %#v", configuration)
 	if configuration.Freebox != nil {
 		log.Printf("[DEBUG] Configuration : %#v", configuration.Freebox)
+		configuration.BoxProvider = "freebox"
+	}
+	if configuration.Livebox != nil {
+		log.Printf("[DEBUG] Configuration : %#v", configuration.Livebox)
+		configuration.BoxProvider = "livebox"
 	}
 	if configuration.InfluxDB != nil {
 		log.Printf("[DEBUG] Configuration : %#v", configuration.InfluxDB)
