@@ -99,7 +99,7 @@ func Do(provider Provider, method, urlStr string, body interface{}, result inter
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode == http.StatusOK {
-		return nil, decodeResponse(resp, result)
+		return decodeResponse(resp, result)
 	}
 	content, err := getResponseBody(resp)
 	if err != nil {
@@ -113,19 +113,29 @@ func Do(provider Provider, method, urlStr string, body interface{}, result inter
 	return nil, &apiError
 }
 
-func decodeResponse(resp *http.Response, v interface{}) error {
+func decodeResponse(resp *http.Response, v interface{}) ([]*http.Cookie, error) {
 	log.Printf("[DEBUG] Decode response")
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	log.Printf("[DEBUG] HTTP Response: %d / %s",
-		resp.StatusCode, string(body))
+	cookies := resp.Cookies()
+	if len(resp.Cookies()) == 0 { // Check invalid cookies
+		line := resp.Header.Get("Set-Cookie")
+		if len(line) > 0 {
+			c := readCookie(line)
+			if c != nil {
+				cookies = append(cookies, c)
+			}
+		}
+	}
+	log.Printf("[DEBUG] HTTP Response: %d / %s / %v",
+		resp.StatusCode, string(body), cookies)
 	err = json.Unmarshal(body, v)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	return nil
+	return cookies, nil
 }
 
 func getResponseBody(resp *http.Response) (string, error) {
