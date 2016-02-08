@@ -33,7 +33,7 @@ package livebox
 
 import (
 	"fmt"
-	//"log"
+	"log"
 	"net/http"
 	"net/url"
 
@@ -85,13 +85,13 @@ func (c *Client) SetupHeaders(request *http.Request) {
 	request.Header.Add("Content-Type", providers.MediaType)
 	request.Header.Add("Accept", providers.AcceptHeader)
 	request.Header.Add("User-Agent", providers.UserAgent)
-	request.Header.Add("X-Context", c.ContextID)
-	request.Header.Add("X-Sah-Request-Type", "idle")
-	request.Header.Add("X-Requested-With", "XMLHttpRequest")
 	if c.Cookies != nil {
 		for _, cookie := range c.Cookies {
 			request.AddCookie(cookie)
 		}
+		request.Header.Add("X-Context", c.ContextID)
+		request.Header.Add("X-Sah-Request-Type", "idle")
+		request.Header.Add("X-Requested-With", "XMLHttpRequest")
 	}
 }
 
@@ -114,7 +114,12 @@ func (c *Client) Ping() error {
 }
 
 func (c *Client) Authenticate() error {
-	return fmt.Errorf("Not implemented")
+	_, err := c.authenticate()
+	if err != nil {
+		return err
+	}
+	log.Printf("[DEBUG] Livebox authentication done")
+	return nil
 }
 
 func (c *Client) Statistics() (*providers.ProviderConnectionStatistics, error) {

@@ -121,13 +121,24 @@ func decodeResponse(resp *http.Response, v interface{}) ([]*http.Cookie, error) 
 	}
 	cookies := resp.Cookies()
 	if len(resp.Cookies()) == 0 { // Check invalid cookies
-		line := resp.Header.Get("Set-Cookie")
-		if len(line) > 0 {
-			c := readCookie(line)
-			if c != nil {
-				cookies = append(cookies, c)
+		// line := resp.Header.Get("Set-Cookie")
+		// log.Printf("[DEBUG] Cookie: %s", line)
+		// if len(line) > 0 {
+		// 	c := readCookie(line)
+		// 	if c != nil {
+		// 		cookies = append(cookies, c)
+		// 	}
+		// }
+		for k, v := range resp.Header {
+			fmt.Printf("H: %s ** %s\n", k, v)
+			if k == "Set-Cookie" {
+				c := readCookie(fmt.Sprintf("%s %s", k, v))
+				if c != nil {
+					cookies = append(cookies, c)
+				}
 			}
 		}
+
 	}
 	log.Printf("[DEBUG] HTTP Response: %d / %s / %v",
 		resp.StatusCode, string(body), cookies)
