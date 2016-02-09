@@ -123,5 +123,9 @@ func (c *Client) Authenticate() error {
 }
 
 func (c *Client) Statistics() (*providers.ProviderConnectionStatistics, error) {
-	return nil, fmt.Errorf("Not implemented")
+	_, err := c.connectionStatus()
+	if err != nil {
+		return nil, err
+	}
+	return nil, nil
 }
