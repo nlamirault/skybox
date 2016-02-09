@@ -226,6 +226,6 @@ func readCookie(line string) *http.Cookie {
 		}
 		c.Unparsed = append(c.Unparsed, parts[i])
 	}
-	log.Printf("[DEBUG] Cookie ok: %v", c)
+	log.Printf("[DEBUG] Cookie ok: %#v", c)
 	return c
 }

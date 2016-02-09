@@ -15,15 +15,21 @@
 package providers
 
 import (
+	//"log"
+	"net/http"
 	"testing"
 )
 
 // https://www.reddit.com/r/golang/comments/44cjvy/http_response_cant_retrieve_cookies/
-func TestLiveboxReadCookie(t *testing.T) {
-	header := "Set-Cookie [25200fcf/sessid=Cusei7vG93RWDrabChZ9SlNJ; Path=/]"
-	c := readCookie(header)
-	str := generateCookie(c)
-	if str != header {
-		t.Fatalf("Livebox invalid read cookie: %#v %s", c, str)
+func TestReadInvalidCookie(t *testing.T) {
+	headers := make(http.Header)
+	headers.Add("Set-Cookie", "25200fcf/sessid=Cusei7vG93RWDrabChZ9SlNJ; Path=/")
+	c := readCookie(headers.Get("Set-Cookie"))
+	if c == nil {
+		t.Fatalf("Livebox no cookie")
+	}
+	if c.Name != "25200fcf/sessid" || c.Value != "Cusei7vG93RWDrabChZ9SlNJ" ||
+		c.Path != "/" {
+		t.Fatalf("Livebox invalid read cookie: %#v", c)
 	}
 }

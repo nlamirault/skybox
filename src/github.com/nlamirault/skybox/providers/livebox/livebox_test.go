@@ -38,6 +38,7 @@ func newLivebox(handler http.HandlerFunc) (*Client, *httptest.Server, error) {
 func TestLiveboxAuthenticate(t *testing.T) {
 	box, server, err := newLivebox(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", providers.AcceptHeader)
+		w.Header().Set("Set-Cookie", "25200fcf/sessid=Cusei7vG93RWDrabChZ9SlNJ; Path=/")
 		fmt.Fprintln(w, `{
      "status":0,
      "data": {
@@ -59,5 +60,12 @@ func TestLiveboxAuthenticate(t *testing.T) {
 	}
 	if box.ContextID != "RmjJzr2UIXk2zFteSiU0i1bK8wUuS8QyhZ6GeWoLKyC82T0K2TH9HGIF1sXJnD6s" {
 		t.Fatalf("Livebox contextID not set: %v", box)
+	}
+	fmt.Printf("Cookies: %v\n", box.Cookies)
+	if len(box.Cookies) != 1 {
+		t.Fatalf("Livebox invalid cookies %d", len(box.Cookies))
+	}
+	if box.Cookies[0].Name != "25200fcf/sessid" || box.Cookies[0].Value != "Cusei7vG93RWDrabChZ9SlNJ" {
+		t.Fatalf("Livebox invalid cookie %#v", box.Cookies[0])
 	}
 }
