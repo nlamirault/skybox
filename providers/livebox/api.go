@@ -132,6 +132,30 @@ func (c *Client) connectionStatus() (*apiConnectionStatusResponse, error) {
 	return resp, nil
 }
 
+type apiTimeResponse struct {
+	Result struct {
+		Status bool `json:"status"`
+		Data   struct {
+			Time string `json:"time"`
+		}
+	}
+}
+
+func (c *Client) getTime() (*apiTimeResponse, error) {
+	log.Printf("[DEBUG] LiveboxAPI Get time\n")
+	var resp *apiTimeResponse
+	_, err := providers.Do(
+		c,
+		"POST",
+		c.getLiveboxAPIRequest("Time:getTime"),
+		nil,
+		&resp)
+	if err != nil {
+		return nil, err
+	}
+	return resp, nil
+}
+
 func (c *Client) getLiveboxAPIRequest(request string) string {
 	return fmt.Sprintf("%s/sysbus/%s", c.Endpoint, request)
 }

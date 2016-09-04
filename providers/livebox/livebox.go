@@ -110,15 +110,23 @@ func (c *Client) Setup(config *config.Configuration) error {
 }
 
 func (c *Client) Ping() error {
-	return fmt.Errorf("Not implemented")
-}
-
-func (c *Client) Authenticate() error {
-	_, err := c.authenticate()
+	c.Authenticate()
+	resp, err := c.getTime()
 	if err != nil {
 		return err
 	}
-	log.Printf("[DEBUG] Livebox authentication done")
+	log.Printf("[DEBUG] Livebox Time: %s", resp.Result.Data.Time)
+	return nil
+}
+
+func (c *Client) Authenticate() error {
+	if len(c.Cookies) == 0 && len(c.ContextID) == 0 {
+		_, err := c.authenticate()
+		if err != nil {
+			return err
+		}
+		log.Printf("[DEBUG] Livebox authentication done")
+	}
 	return nil
 }
 
