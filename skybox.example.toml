@@ -1,0 +1,28 @@
+############################
+#
+# Skybox configuration file
+#
+############################
+
+# Box Provider
+# provider = "freebox"
+provider = "livebox"
+
+# Output plugin
+output = "influxdb"
+
+[freebox]
+url= "http://mafreebox.freebox.fr/"
+token = "xxxx"
+
+[livebox]
+url = "http://192.168.1.1"
+username = "xxxxxx"
+password = "xxxxx"
+
+[influxdb]
+url = "http://localhost:8086/"
+username = "root"
+password = "root"
+database = "skybox"
+retentionPolicy = "default"
