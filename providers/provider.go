@@ -65,6 +65,9 @@ type Provider interface {
 	// Wifi retrieve informations about the wifi
 	Wifi() (*WifiStatus, error)
 
+	// TV retrieve informations about the TV
+	TV() ([]*TVStatus, error)
+
 	// Devices retrieve connected devices
 	Devices() ([]*BoxDevice, error)
 }
@@ -97,6 +100,12 @@ type NetworkInformations struct {
 type WifiStatus struct {
 	State  bool `json:"state"`
 	Enable bool `json:"enable"`
+}
+
+// TVStatus define the informations related to the TV
+type TVStatus struct {
+	State bool   `json:"state"`
+	Name  string `json:"name"`
 }
 
 // BoxDevice define a device connected to the box provider network

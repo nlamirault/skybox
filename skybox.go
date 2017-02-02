@@ -87,7 +87,7 @@ func main() {
 		}
 		return nil
 	}
-	// logrus.SetLevel(logrus.DebugLevel)
+	//logrus.SetLevel(logrus.DebugLevel)
 	if err := app.Run(os.Args); err != nil {
 		logrus.Fatal(err)
 	}

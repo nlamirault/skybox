@@ -71,6 +71,15 @@ func boxProviderInformations(agent *Agent, conf *config.Configuration) error {
 	fmt.Printf("Enabled: %t\n", wifi.Enable)
 	fmt.Printf("State: %t\n", wifi.State)
 
+	tv, err := agent.Provider.TV()
+	if err != nil {
+		return err
+	}
+	fmt.Printf(yellowOut("== TV ==\n"))
+	for _, st := range tv {
+		fmt.Printf("- %s: %t\n", st.Name, st.State)
+	}
+
 	devices, err := agent.Provider.Devices()
 	if err != nil {
 		return err

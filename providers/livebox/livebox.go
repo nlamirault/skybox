@@ -162,6 +162,25 @@ func (c *Client) Wifi() (*providers.WifiStatus, error) {
 	}, nil
 }
 
+func (c *Client) TV() ([]*providers.TVStatus, error) {
+	if err := c.Authenticate(); err != nil {
+		return nil, err
+	}
+	tvStatus, err := c.tvStatus()
+	if err != nil {
+		return nil, err
+	}
+	logrus.Debugf("TV: %s", tvStatus)
+	tv := []*providers.TVStatus{}
+	for _, status := range tvStatus.Result.Status {
+		tv = append(tv, &providers.TVStatus{
+			State: status.ChannelStatus,
+			Name:  status.ChannelFlags,
+		})
+	}
+	return tv, nil
+}
+
 func (c *Client) Devices() ([]*providers.BoxDevice, error) {
 	if err := c.Authenticate(); err != nil {
 		return nil, err

@@ -174,6 +174,10 @@ func (c *Client) Wifi() (*providers.WifiStatus, error) {
 	return nil, fmt.Errorf("Not implemented")
 }
 
+func (c *Client) TV() ([]*providers.TVStatus, error) {
+	return nil, fmt.Errorf("Not implemented")
+}
+
 func (c *Client) Devices() ([]*providers.BoxDevice, error) {
 	return nil, fmt.Errorf("Not implemented")
 }
