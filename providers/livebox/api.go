@@ -1,4 +1,4 @@
-// Copyright (C) 2016 Nicolas Lamirault <nicolas.lamirault@gmail.com>
+// Copyright (C) 2016, 2017 Nicolas Lamirault <nicolas.lamirault@gmail.com>
 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,27 +25,6 @@ const (
 	defaultURL = "http://192.168.1.1"
 )
 
-type apiErrorEntryResponse struct {
-	ErrorCode   int    `json:"error"`
-	Description string `json:"description"`
-	Info        string `json:"info"`
-}
-
-type apiErrorResponse struct {
-	Result struct {
-		Status struct {
-			Errors []apiErrorEntryResponse
-		}
-	}
-}
-
-type apiAuthenticateResponse struct {
-	Status int `json:"status"`
-	Data   struct {
-		ContextID string `json:"contextID"`
-	}
-}
-
 func (c *Client) authenticate() (*apiAuthenticateResponse, error) {
 	log.Printf("[DEBUG] LiveboxAPI authenticate\n")
 	var resp *apiAuthenticateResponse
@@ -59,12 +38,13 @@ func (c *Client) authenticate() (*apiAuthenticateResponse, error) {
 	if err != nil {
 		return nil, err
 	}
+	if len(cookies) == 0 {
+		return nil, fmt.Errorf("Can't read cookie from Livebox")
+	}
 	c.Cookies = cookies
 	c.ContextID = resp.Data.ContextID
+	log.Printf("[DEBUG] ContextID: %s", c.ContextID)
 	return resp, nil
-}
-
-type apiDisconnectResponse struct {
 }
 
 func (c *Client) disconnect() (*apiDisconnectResponse, error) {
@@ -82,41 +62,6 @@ func (c *Client) disconnect() (*apiDisconnectResponse, error) {
 	return resp, nil
 }
 
-type apiMibDslResponse struct {
-	LastChangeTime        int    `json:"LastChangeTime"`
-	LastChange            int    `json:"LastChange"`
-	LinkStatus            string `json:"LinkStatus"`
-	UpstreamCurrRate      int    `json:"UpstreamCurrRate"`
-	DownstreamCurrRate    int    `json:"DownstreamCurrRate"`
-	UpstreamMaxRate       int    `json:"UpstreamMaxRate"`
-	DownstreamMaxRate     int    `json:"DownstreamMaxRate"`
-	UpstreamNoiseMargin   int    `json:"UpstreamNoiseMargin"`
-	DownstreamNoiseMargin int    `json:"DownstreamNoiseMargin"`
-	UpstreamAttenuation   int    `json:"UpstreamAttenuation"`
-	DownstreamAttenuation int    `json:"DownstreamAttenuation"`
-	UpstreamPower         int    `json:"UpstreamPower"`
-	DownstreamPower       int    `json:"DownstreamPower"`
-	DataPath              string `json:"DataPath"`
-	InterleaveDepth       int    `json:"InterleaveDepth"`
-	ModulationType        string `json:"ModulationType"`
-	ModulationHint        string `json:"ModulationHint"`
-	FirmwareVersion       string `json:"FirmwareVersion"`
-	StandardsSupported    string `json:"StandardsSupported"`
-	StandardUsed          string `json:"StandardUsed"`
-	CurrentProfile        string `json:"CurrentProfile"`
-	Upbokle               int    `json:"UPBOKLE"`
-}
-
-type apiConnectionStatusResponse struct {
-	Result struct {
-		Status struct {
-			Dsl struct {
-				Dls0 apiMibDslResponse
-			}
-		}
-	}
-}
-
 func (c *Client) connectionStatus() (*apiConnectionStatusResponse, error) {
 	log.Printf("[DEBUG] LiveboxAPI retrieve MIBs\n")
 	var resp *apiConnectionStatusResponse
@@ -132,13 +77,64 @@ func (c *Client) connectionStatus() (*apiConnectionStatusResponse, error) {
 	return resp, nil
 }
 
-type apiTimeResponse struct {
-	Result struct {
-		Status bool `json:"status"`
-		Data   struct {
-			Time string `json:"time"`
-		}
+func (c *Client) wanStatus() (*apiWanStatusResponse, error) {
+	log.Printf("[DEBUG] LiveboxAPI retrieve wan informations")
+	var resp *apiWanStatusResponse
+	_, err := providers.Do(
+		c,
+		"POST",
+		c.getLiveboxAPIRequest("NMC:getWANStatus"),
+		nil,
+		&resp)
+	if err != nil {
+		return nil, err
 	}
+	return resp, nil
+}
+
+func (c *Client) wifiStatus() (*apiWifiStatusResponse, error) {
+	log.Printf("[DEBUG] LiveboxAPI retrieve wifi informations")
+	var resp *apiWifiStatusResponse
+	_, err := providers.Do(
+		c,
+		"POST",
+		c.getLiveboxAPIRequest("NMC/Wifi:get"),
+		nil,
+		&resp)
+	if err != nil {
+		return nil, err
+	}
+	return resp, nil
+}
+
+func (c *Client) tvStatus() (*apiTVStatusResponse, error) {
+	log.Printf("[DEBUG] LiveboxAPI retrieve device informations")
+	var resp *apiTVStatusResponse
+	_, err := providers.Do(
+		c,
+		"POST",
+		c.getLiveboxAPIRequest("NMC/OrangeTV:getIPTVConfig"),
+		nil,
+		&resp)
+	if err != nil {
+		return nil, err
+	}
+	return resp, nil
+}
+
+func (c *Client) devices() (*apiDevicesResponse, error) {
+	log.Printf("[DEBUG] LiveboxAPI retrieve connected devices")
+	var resp *apiDevicesResponse
+	_, err := providers.Do(
+		c,
+		"POST",
+		c.getLiveboxAPIRequest("Devices:get"),
+		nil,
+		&resp)
+	if err != nil {
+		return nil, err
+	}
+	return resp, nil
 }
 
 func (c *Client) getTime() (*apiTimeResponse, error) {

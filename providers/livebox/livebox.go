@@ -1,4 +1,4 @@
-// Copyright (C) 2016 Nicolas Lamirault <nicolas.lamirault@gmail.com>
+// Copyright (C) 2016, 2017 Nicolas Lamirault <nicolas.lamirault@gmail.com>
 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -11,23 +11,6 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-
-// Orange Livebox API
-
-// http://192.168.1.1/sysbus/Wificom:getStatus
-
-// http://192.168.1.1/sysbus/NeMo/Intf/dsl0:getDSLStats
-// http://192.168.1.1/sysbus/NeMo/Intf/data:getMIBs
-// http://192.168.1.1/sysbus/NeMo/Intf/lan:getMIBs
-// http://192.168.1.1/sysbus/NeMo/Intf/lan:luckyAddrAddress
-// http://192.168.1.1/sysbus/NeMo/Intf/data:luckyAddrAddress
-
-// http://192.168.1.1/sysbus/UserManagement:getUsers
-
-// http://192.168.1.1/sysbus/NMC:getWANStatus : status wan
-// http://192.168.1.1/sysbus/NMC/OrangeTV:getIPTVStatus : status TV
-
-// http://192.168.1.1/sysbus/VoiceService/VoiceApplication:listTrunks
 
 package livebox
 
@@ -110,7 +93,10 @@ func (c *Client) Setup(config *config.Configuration) error {
 }
 
 func (c *Client) Ping() error {
-	c.Authenticate()
+	_, err := c.authenticate()
+	if err != nil {
+		return err
+	}
 	resp, err := c.getTime()
 	if err != nil {
 		return err
@@ -130,10 +116,72 @@ func (c *Client) Authenticate() error {
 	return nil
 }
 
-func (c *Client) Statistics() (*providers.ProviderConnectionStatistics, error) {
-	_, err := c.connectionStatus()
+func (c *Client) Statistics() (*providers.ConnectionStatistics, error) {
+	if err := c.Authenticate(); err != nil {
+		return nil, err
+	}
+	conStatus, err := c.connectionStatus()
 	if err != nil {
 		return nil, err
 	}
-	return nil, nil
+	log.Printf("[DEBUG] Statistics: %s", conStatus)
+	return &providers.ConnectionStatistics{}, nil
+}
+
+func (c *Client) Network() (*providers.NetworkInformations, error) {
+	if err := c.Authenticate(); err != nil {
+		return nil, err
+	}
+	wanStatus, err := c.wanStatus()
+	if err != nil {
+		return nil, err
+	}
+	log.Printf("[DEBUG] Wan: %s", wanStatus)
+	return &providers.NetworkInformations{
+		IPV4Address: wanStatus.Result.Data.IPAddress,
+		IPV6Address: wanStatus.Result.Data.IPv6Address,
+		DNS:         wanStatus.Result.Data.DNSServers,
+		State:       wanStatus.Result.Data.LinkState,
+	}, nil
+}
+
+func (c *Client) Wifi() (*providers.WifiStatus, error) {
+	if err := c.Authenticate(); err != nil {
+		return nil, err
+	}
+	wifiStatus, err := c.wifiStatus()
+	if err != nil {
+		return nil, err
+	}
+	log.Printf("[DEBUG] Wan: %s", wifiStatus)
+	return &providers.WifiStatus{
+		State:  wifiStatus.Result.Status.Status,
+		Enable: wifiStatus.Result.Status.Enable,
+	}, nil
+}
+
+func (c *Client) Devices() ([]*providers.BoxDevice, error) {
+	if err := c.Authenticate(); err != nil {
+		return nil, err
+	}
+	devices, err := c.devices()
+	if err != nil {
+		return nil, err
+	}
+	log.Printf("[DEBUG] Devices: %s", devices)
+	thedevices := []*providers.BoxDevice{}
+	for _, dev := range devices.Result.Status {
+		if dev.Active && len(dev.IPAddress) > 0 {
+			devType := "wifi"
+			if dev.Layer2Interface == "eth0" {
+				devType = "ethernet"
+			}
+			thedevices = append(thedevices, &providers.BoxDevice{
+				Name:      dev.Name,
+				Type:      devType,
+				IPAddress: dev.IPAddress,
+			})
+		}
+	}
+	return thedevices, nil
 }

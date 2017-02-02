@@ -1,4 +1,4 @@
-// Copyright (C) 2016 Nicolas Lamirault <nicolas.lamirault@gmail.com>
+// Copyright (C) 2016, 2017 Nicolas Lamirault <nicolas.lamirault@gmail.com>
 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,15 +19,14 @@ import (
 	"fmt"
 	"log"
 	"strings"
-	"time"
+	// "time"
 
-	"github.com/influxdata/influxdb/client/v2"
 	"github.com/mitchellh/cli"
 
 	"github.com/nlamirault/skybox/config"
 )
 
-// MonitorCommand defines the CLI command to manage buckets
+// MonitorCommand defines the CLI command to monitor
 type MonitorCommand struct {
 	UI cli.Ui
 }
@@ -36,12 +35,12 @@ type MonitorCommand struct {
 func (c *MonitorCommand) Help() string {
 	helpText := `
 Usage: skybox monitor [options] action
-	Monitor box provider and send data using the output plugin
+	Monitor box provider and export metrics
 Options:
 	` + generalOptionsUsage() + `
-Action :
-        display                      Retrieve the box provider statistics
-        box                          Monitor the box provider
+
+        export                     Export the box provider metrics
+        dryrun                     Display live metrics
 `
 	return strings.TrimSpace(helpText)
 }
@@ -75,12 +74,7 @@ func (c *MonitorCommand) Run(args []string) int {
 		return 1
 	}
 	setLogging(debug)
-	conf, err := getConfiguration(configFile)
-	if err != nil {
-		c.UI.Error(err.Error())
-		return 1
-	}
-	agent, err := NewAgent(conf)
+	conf, agent, err := setup(configFile)
 	if err != nil {
 		c.UI.Error(err.Error())
 		return 1
@@ -89,10 +83,10 @@ func (c *MonitorCommand) Run(args []string) int {
 
 	action := args[0]
 	switch action {
-	case "display":
+	case "dryrun":
 		c.doDisplayBoxMonitoring(agent, conf)
-	case "box":
-		c.doBoxMonitoring(agent, conf)
+	case "export":
+		c.doExportBoxMonitoring(agent, conf)
 	default:
 		f.Usage()
 	}
@@ -100,25 +94,34 @@ func (c *MonitorCommand) Run(args []string) int {
 }
 
 func (c *MonitorCommand) doDisplayBoxMonitoring(agent *Agent, conf *config.Configuration) {
-	c.UI.Info(fmt.Sprintf("Display box provider statistics: %s", agent.Provider.Description()))
+	c.UI.Info(fmt.Sprintf("Display box provider metrics: %s", agent.Provider.Description()))
 	log.Printf("[DEBUG] Skybox box provider: %v", agent.Provider)
-	agent.Provider.Setup(conf)
-	agent.Provider.Authenticate()
-	resp, err := agent.Provider.Statistics()
+	if err := agent.Provider.Setup(conf); err != nil {
+		c.UI.Error(err.Error())
+		return
+	}
+	if err := agent.Provider.Authenticate(); err != nil {
+		c.UI.Error(err.Error())
+		return
+	}
+
+	statistics, err := agent.Provider.Statistics()
 	if err != nil {
 		c.UI.Error(err.Error())
 		return
 	}
+	log.Printf("[DEBUG] Skybox response: %s", statistics)
+	c.UI.Info("Connection status:")
 	c.UI.Output(fmt.Sprintf("Rate: [Up/Down]: %d / %d",
-		resp.RateUp, resp.RateDown))
+		statistics.RateUp, statistics.RateDown))
 	c.UI.Output(fmt.Sprintf("Bytes: [Up/Down]: %d / %d",
-		resp.BytesUp, resp.BytesDown))
+		statistics.BytesUp, statistics.BytesDown))
 	c.UI.Output(fmt.Sprintf("Bandwidth: [Up/Down]: %d / %d",
-		resp.BandwidthUp, resp.BandwidthDown))
-	c.UI.Output(fmt.Sprintf("Box provider statistics successfully retrieve"))
+		statistics.BandwidthUp, statistics.BandwidthDown))
+
 }
 
-func (c *MonitorCommand) doBoxMonitoring(agent *Agent, conf *config.Configuration) {
+func (c *MonitorCommand) doExportBoxMonitoring(agent *Agent, conf *config.Configuration) {
 	c.UI.Info(fmt.Sprintf("Display box provider statistics: %s", agent.Provider.Description()))
 	log.Printf("[DEBUG] Skybox box provider: %v", agent.Provider)
 
@@ -129,71 +132,5 @@ func (c *MonitorCommand) doBoxMonitoring(agent *Agent, conf *config.Configuratio
 	if err := agent.Provider.Authenticate(); err != nil {
 		c.UI.Error(err.Error())
 		return
-	}
-	if err := agent.Output.Setup(conf); err != nil {
-		c.UI.Error(err.Error())
-		return
-	}
-	if err := agent.Output.Connect(); err != nil {
-		c.UI.Error(err.Error())
-		return
-	}
-	tick := time.Tick(time.Second * time.Duration(conf.Interval))
-	for _ = range tick {
-		resp, err := agent.Provider.Statistics()
-		if err != nil {
-			fmt.Printf("Error with box statistics: %s\n", err.Error())
-			continue
-		}
-		fmt.Printf("Rate: [Up/Down]: %d / %d\n",
-			resp.RateUp, resp.RateDown)
-		fmt.Printf("Bytes: [Up/Down]: %d / %d\n",
-			resp.BytesUp, resp.BytesDown)
-		fmt.Printf("Bandwidth: [Up/Down]: %d / %d\n",
-			resp.BandwidthUp, resp.BandwidthDown)
-
-		var points []*client.Point
-
-		rateTags := map[string]string{"rate": "rate-up-down"}
-		rateFields := map[string]interface{}{
-			"up":   resp.RateUp,
-			"down": resp.RateDown,
-		}
-		ratePt, err := client.NewPoint("rate", rateTags, rateFields, time.Now())
-		if err != nil {
-			fmt.Printf("Error creating rate statistics for output: %s\n", err.Error())
-			continue
-		}
-		points = append(points, ratePt)
-
-		bytesTags := map[string]string{"bytes": "bytes-up-down"}
-		bytesFields := map[string]interface{}{
-			"up":   resp.BytesUp,
-			"down": resp.BytesDown,
-		}
-		bytesPt, err := client.NewPoint("bytes", bytesTags, bytesFields, time.Now())
-		if err != nil {
-			fmt.Printf("Error creating bytes statistics for output: %s\n", err.Error())
-			continue
-		}
-		points = append(points, bytesPt)
-
-		bandwidthTags := map[string]string{"bandwidth": "bandwidth-up-down"}
-		bandwidthFields := map[string]interface{}{
-			"up":   resp.BandwidthUp,
-			"down": resp.BandwidthDown,
-		}
-		bandwidthPt, err := client.NewPoint("bandwidth", bandwidthTags, bandwidthFields, time.Now())
-		if err != nil {
-			fmt.Printf("Error creating bandwidth statistics for output: %s\n", err.Error())
-			continue
-		}
-		points = append(points, bandwidthPt)
-
-		err = agent.Output.Write(points)
-		if err != nil {
-			fmt.Printf("Error writing statistics : %s\n", err.Error())
-			continue
-		}
 	}
 }

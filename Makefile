@@ -1,4 +1,4 @@
-# Copyright (C) 2016 Nicolas Lamirault <nicolas.lamirault@gmail.com>
+# Copyright (C) 2016, 2017 Nicolas Lamirault <nicolas.lamirault@gmail.com>
 
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,6 +14,12 @@
 
 APP = skybox
 
+VERSION=$(shell \
+        grep "const Version" version/version.go \
+        |awk -F'=' '{print $$2}' \
+        |sed -e "s/[^0-9.]//g" \
+	|sed -e "s/ //g")
+
 SHELL = /bin/bash
 
 DIR = $(shell pwd)
@@ -24,9 +30,11 @@ GO = go
 GLIDE = glide
 
 GOX = gox -os="linux darwin windows freebsd openbsd netbsd"
+GOX_ARGS = "-output={{.Dir}}-$(VERSION)_{{.OS}}_{{.Arch}}"
 
 BINTRAY_URI = https://api.bintray.com
 BINTRAY_USERNAME = nlamirault
+BINTRAY_ORG = nlamirault
 BINTRAY_REPOSITORY= oss
 
 NO_COLOR=\033[0m
@@ -36,21 +44,13 @@ WARN_COLOR=\033[33;01m
 
 MAKE_COLOR=\033[33;01m%-20s\033[0m
 
-MAIN = github.com/nlamirault/skybox
+MAIN = github.com/nlamirault/helmsman
 SRCS = $(shell git ls-files '*.go' | grep -v '^vendor/')
 PKGS = $(shell glide novendor)
-EXE = abraracourcix
-
-VERSION=$(shell \
-        grep "const Version" version/version.go \
-        |awk -F'=' '{print $$2}' \
-        |sed -e "s/[^0-9.]//g" \
-	|sed -e "s/ //g")
+EXE = $(shell ls helmsman-*_*)
 
 PACKAGE=$(APP)-$(VERSION)
 ARCHIVE=$(PACKAGE).tar
-
-GOX_ARGS = "-output={{.Dir}}-$(VERSION)_{{.OS}}_{{.Arch}}"
 
 .DEFAULT_GOAL := help
 
@@ -61,13 +61,13 @@ help:
 
 clean: ## Cleanup
 	@echo -e "$(OK_COLOR)[$(APP)] Cleanup$(NO_COLOR)"
-	@rm -fr $(EXE) $(EXE)-$(VERSION)_* $(APP)-*.tar.gz
+	@rm -fr $(APP) $(EXE) $(APP)-*.tar.gz
 
 .PHONY: init
 init: ## Install requirements
 	@echo -e "$(OK_COLOR)[$(APP)] Install requirements$(NO_COLOR)"
 	@go get -u github.com/golang/glog
-	@go get -u github.com/Masterminds/glide
+	@go get -u github.com/kardianos/govendor
 	@go get -u github.com/Masterminds/rmvcsdir
 	@go get -u github.com/golang/lint/golint
 	@go get -u github.com/kisielk/errcheck
@@ -77,7 +77,7 @@ init: ## Install requirements
 .PHONY: deps
 deps: ## Install dependencies
 	@echo -e "$(OK_COLOR)[$(APP)] Update dependencies$(NO_COLOR)"
-	@glide up -u -s -v
+	@govendor update
 
 .PHONY: build
 build: ## Make binary
@@ -87,7 +87,7 @@ build: ## Make binary
 .PHONY: test
 test: ## Launch unit tests
 	@echo -e "$(OK_COLOR)[$(APP)] Launch unit tests $(NO_COLOR)"
-	@$(GO) test -v $$(glide nv)
+	@govendor test +local
 
 .PHONY: lint
 lint: ## Launch golint
@@ -104,22 +104,23 @@ errcheck: ## Launch go errcheck
 
 .PHONY: coverage
 coverage: ## Launch code coverage
-	@$(foreach pkg,$(PKGS),$(GO) test -cover $(pkg) $(glide novendor) || exit;)
+#	@$(foreach pkg,$(PKGS),$(GO) test -cover $(pkg) $(glide novendor) || exit;)
+	@$(foreach pkg,$(PKGS),$(GO) test -cover $(pkg) || exit;)
 
 gox: ## Make all binaries
 	@echo -e "$(OK_COLOR)[$(APP)] Create binaries $(NO_COLOR)"
-	$(GOX) $(GOX_ARGS) github.com/nlamirault/skybox
+	$(GOX) $(GOX_ARGS) github.com/nlamirault/helmsman
 
 .PHONY: binaries
-binaries: gox ## Upload all binaries
+binaries: ## Upload all binaries
 	@echo -e "$(OK_COLOR)[$(APP)] Upload binaries to Bintray $(NO_COLOR)"
 	for i in $(EXE); do \
 		curl -T $$i \
 			-u$(BINTRAY_USERNAME):$(BINTRAY_APIKEY) \
-			"$(BINTRAY_URI)/content/$(BINTRAY_USERNAME)/$(BINTRAY_REPOSITORY)/$(APP)/${VERSION}/$$i;publish=1"; \
+			"$(BINTRAY_URI)/content/$(BINTRAY_ORG)/$(BINTRAY_REPOSITORY)/$(APP)/${VERSION}/$$i;publish=1"; \
         done
 
 # for goprojectile
 .PHONY: gopath
 gopath:
-	@echo GOPATH=`pwd`:`pwd`/vendor
+	@echo `pwd`:`pwd`/vendor

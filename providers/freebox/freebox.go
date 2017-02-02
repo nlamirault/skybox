@@ -1,4 +1,4 @@
-// Copyright (C) 2016 Nicolas Lamirault <nicolas.lamirault@gmail.com>
+// Copyright (C) 2016, 2017 Nicolas Lamirault <nicolas.lamirault@gmail.com>
 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -135,7 +135,7 @@ func (c *Client) Authenticate() error {
 
 }
 
-func (c *Client) Statistics() (*providers.ProviderConnectionStatistics, error) {
+func (c *Client) Statistics() (*providers.ConnectionStatistics, error) {
 	log.Printf("[DEBUG] Freebox retrieve statistics\n")
 	resp, err := c.connectionStatus()
 	if err != nil {
@@ -154,7 +154,7 @@ func (c *Client) Statistics() (*providers.ProviderConnectionStatistics, error) {
 		return nil, err
 	}
 	log.Printf("[DEBUG] Freebox connection status received")
-	return &providers.ProviderConnectionStatistics{
+	return &providers.ConnectionStatistics{
 		RateDown:      resp.Result.RateDown,
 		RateUp:        resp.Result.RateUp,
 		BytesDown:     resp.Result.BytesDown,
@@ -162,4 +162,16 @@ func (c *Client) Statistics() (*providers.ProviderConnectionStatistics, error) {
 		BandwidthDown: resp.Result.BandwidthDown,
 		BandwidthUp:   resp.Result.BandwidthUp,
 	}, nil
+}
+
+func (c *Client) Network() (*providers.NetworkInformations, error) {
+	return nil, fmt.Errorf("Not implemented")
+}
+
+func (c *Client) Wifi() (*providers.WifiStatus, error) {
+	return nil, fmt.Errorf("Not implemented")
+}
+
+func (c *Client) Devices() ([]*providers.BoxDevice, error) {
+	return nil, fmt.Errorf("Not implemented")
 }

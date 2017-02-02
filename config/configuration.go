@@ -1,4 +1,4 @@
-// Copyright (C) 2016 Nicolas Lamirault <nicolas.lamirault@gmail.com>
+// Copyright (C) 2016, 2017 Nicolas Lamirault <nicolas.lamirault@gmail.com>
 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,8 +27,6 @@ type Configuration struct {
 
 	// BoxProvider is the name of the box provider
 	BoxProvider string `toml:"box"`
-	// OutputPlugin is the name of the output plugin to store data
-	OutputPlugin string `toml:"output"`
 
 	// Debug is the option for running in debug mode
 	Debug bool `toml:"interval"`
@@ -36,24 +34,12 @@ type Configuration struct {
 	// Providers
 	Freebox *FreeboxConfiguration `toml:"freebox"`
 	Livebox *LiveboxConfiguration `toml:"livebox"`
-
-	// Outputs
-	InfluxDB *InfluxdbConfiguration `toml:"influxdb"`
 }
 
 // New returns a Configuration with default values
 func New() *Configuration {
 	return &Configuration{
-		Interval:     5,
-		OutputPlugin: "influxdb",
-		// BoxProvider:  "freebox",
-		// Freebox: &FreeboxConfiguration{
-		// 	URL: "http://mafreebox.freebox.fr",
-		// },
-		InfluxDB: &InfluxdbConfiguration{
-			URL:      "http://localhost:8086",
-			Username: "admin",
-			Password: "admin"},
+		Interval: 5,
 	}
 }
 
@@ -73,9 +59,6 @@ func LoadFileConfig(file string) (*Configuration, error) {
 		log.Printf("[DEBUG] Configuration : %#v", configuration.Livebox)
 		configuration.BoxProvider = "livebox"
 	}
-	if configuration.InfluxDB != nil {
-		log.Printf("[DEBUG] Configuration : %#v", configuration.InfluxDB)
-	}
 	return configuration, nil
 }
 
@@ -90,13 +73,4 @@ type LiveboxConfiguration struct {
 	URL      string `toml:"url"`
 	Username string `toml:"username"`
 	Password string `toml:"password"`
-}
-
-// InfluxdbConfiguration defines the configuration for AWS KMS provider
-type InfluxdbConfiguration struct {
-	URL             string `toml:"url"`
-	Username        string `toml:"username"`
-	Password        string `toml:"password"`
-	Database        string `toml:"database"`
-	RetentionPolicy string `toml:"retentionPolicy"`
 }

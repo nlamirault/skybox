@@ -1,4 +1,4 @@
-// Copyright (C) 2015, 2016 Nicolas Lamirault <nicolas.lamirault@gmail.com>
+// Copyright (C) 2015, 2016, 2017 Nicolas Lamirault <nicolas.lamirault@gmail.com>
 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -32,18 +32,9 @@ func TestGetConfiguration(t *testing.T) {
 # Box Provider
 provider = "freebox"
 
-# Output plugin
-output = "influxdb"
-
 [freebox]
 url= "http://mafreebox.freebox.fr"
 token = "xxxxxxxx"
-
-[influxdb]
-url = "http://localhost:8086"
-username = "admin"
-password = "foo"
-database = "skybox"
 `)
 	err = ioutil.WriteFile(templateFile.Name(), data, 0700)
 	if err != nil {
@@ -57,22 +48,11 @@ database = "skybox"
 	if configuration.BoxProvider != "freebox" {
 		t.Fatalf("Configuration box provider failed")
 	}
-	if configuration.OutputPlugin != "influxdb" {
-		t.Fatalf("Configuration output plugin failed")
-	}
 
 	// Box Provider
 	if configuration.Freebox.URL != "http://mafreebox.freebox.fr" ||
 		configuration.Freebox.Token != "xxxxxxxx" {
 		t.Fatalf("Configuration Freeboxfailed")
-	}
-
-	// Output plugin
-	if configuration.InfluxDB.URL != "http://localhost:8086" ||
-		configuration.InfluxDB.Username != "admin" ||
-		configuration.InfluxDB.Password != "foo" ||
-		configuration.InfluxDB.Database != "skybox" {
-		t.Fatalf("Configuration InfluxDB failed")
 	}
 
 }

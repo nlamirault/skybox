@@ -1,4 +1,4 @@
-// Copyright (C) 2016 Nicolas Lamirault <nicolas.lamirault@gmail.com>
+// Copyright (C) 2016, 2017 Nicolas Lamirault <nicolas.lamirault@gmail.com>
 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -123,7 +123,7 @@ func decodeResponse(resp *http.Response, v interface{}) ([]*http.Cookie, error) 
 	if len(resp.Cookies()) == 0 {
 		cookies = parseInvalidCookies(resp.Header)
 	}
-	log.Printf("[DEBUG] HTTP Response: %d / %s / %v",
+	log.Printf("[DEBUG] HTTP Response: code=%d / content=%s / cookies=%v",
 		resp.StatusCode, string(body), cookies)
 	err = json.Unmarshal(body, v)
 	if err != nil {
@@ -133,6 +133,7 @@ func decodeResponse(resp *http.Response, v interface{}) ([]*http.Cookie, error) 
 }
 
 func parseInvalidCookies(header http.Header) []*http.Cookie {
+	log.Printf("[DEBUG] Parse Invalid cookies")
 	cookies := []*http.Cookie{}
 	for k, v := range header {
 		// fmt.Printf("H: %s ** %s\n", k, v)
@@ -140,10 +141,13 @@ func parseInvalidCookies(header http.Header) []*http.Cookie {
 			line := fmt.Sprintf("%s", v)
 			c := readCookie(line[1 : len(line)-1])
 			if c != nil {
+				log.Printf("[DEBUG] Append cookie: %s %#v", cookies, c)
 				cookies = append(cookies, c)
+				log.Printf("[DEBUG] Cookies: %s ==== %#v", cookies, c)
 			}
 		}
 	}
+	log.Printf("[DEBUG] Cookies: %v", cookies)
 	return cookies
 }
 

@@ -1,4 +1,4 @@
-// Copyright (C) 2016 Nicolas Lamirault <nicolas.lamirault@gmail.com>
+// Copyright (C) 2016, 2017 Nicolas Lamirault <nicolas.lamirault@gmail.com>
 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -56,12 +56,21 @@ type Provider interface {
 	// Authenticate perform a call to authenticate the application
 	Authenticate() error
 
-	// Statistics perform a call to retrieve box provider statistics
-	Statistics() (*ProviderConnectionStatistics, error)
+	// Statistics retrieve box provider statistics
+	Statistics() (*ConnectionStatistics, error)
+
+	// Description retrieve some description about the box provider
+	Network() (*NetworkInformations, error)
+
+	// Wifi retrieve informations about the wifi
+	Wifi() (*WifiStatus, error)
+
+	// Devices retrieve connected devices
+	Devices() ([]*BoxDevice, error)
 }
 
-// ProviderConnectionStatistics represents commons statistics for box provider
-type ProviderConnectionStatistics struct {
+// ConnectionStatistics represents commons statistics for box provider
+type ConnectionStatistics struct {
 	// current download rate in byte/s
 	RateDown int `json:"rate_down"`
 	// current download rate in byte/s
@@ -74,4 +83,25 @@ type ProviderConnectionStatistics struct {
 	BandwidthUp int `json:"bandwidth_up"`
 	// available download bandwidth in bit/s
 	BandwidthDown int `json:"bandwidth_down"`
+}
+
+// NetworkInformations define some informations about the box provider
+type NetworkInformations struct {
+	IPV4Address string `json:"ipv4_address"`
+	IPV6Address string `json:"ipv6_address"`
+	DNS         string `json:"dns"`
+	State       string `json:"state"`
+}
+
+// WifiStatus define informations related to the wifi
+type WifiStatus struct {
+	State  bool `json:"state"`
+	Enable bool `json:"enable"`
+}
+
+// BoxDevice define a device connected to the box provider network
+type BoxDevice struct {
+	Type      string `json:"type"`
+	Name      string `json:"name"`
+	IPAddress string `json:"ipaddress"`
 }

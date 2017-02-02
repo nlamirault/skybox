@@ -1,4 +1,4 @@
-// Copyright (C) 2016 Nicolas Lamirault <nicolas.lamirault@gmail.com>
+// Copyright (C) 2016, 2017 Nicolas Lamirault <nicolas.lamirault@gmail.com>
 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,7 +24,6 @@ import (
 
 	"github.com/nlamirault/skybox/config"
 	"github.com/nlamirault/skybox/logging"
-	"github.com/nlamirault/skybox/outputs"
 	"github.com/nlamirault/skybox/providers"
 )
 
@@ -66,10 +65,9 @@ func getConfigurationFile() (string, error) {
 	return filepath.Join(home, defaultConfigurationFile), nil
 }
 
-// Agent provides a box provider client and output plugin client
+// Agent provides a box provider client
 type Agent struct {
 	Provider providers.Provider
-	Output   outputs.Output
 }
 
 func getConfiguration(filename string) (*config.Configuration, error) {
@@ -89,15 +87,20 @@ func NewAgent(conf *config.Configuration) (*Agent, error) {
 	}
 	provider := providerCreator()
 	log.Printf("[DEBUG] Box Provider: %s\n", provider)
-	log.Printf("[DEBUG] Output Plugins: %v\n", outputs.Outputs)
-	outputCreator := outputs.Outputs[conf.OutputPlugin]
-	if providerCreator == nil {
-		return nil, fmt.Errorf("No output plugin found for %s", conf.OutputPlugin)
-	}
-	output := outputCreator()
-	log.Printf("[DEBUG] Output plugin: %v\n", output)
 	return &Agent{
 		Provider: provider,
-		Output:   output,
+		// Output:   output,
 	}, nil
+}
+
+func setup(filename string) (*config.Configuration, *Agent, error) {
+	conf, err := getConfiguration(filename)
+	if err != nil {
+		return nil, nil, err
+	}
+	agent, err := NewAgent(conf)
+	if err != nil {
+		return nil, nil, err
+	}
+	return conf, agent, nil
 }

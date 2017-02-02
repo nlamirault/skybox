@@ -1,4 +1,4 @@
-// Copyright (C) 2016 Nicolas Lamirault <nicolas.lamirault@gmail.com>
+// Copyright (C) 2016, 2017 Nicolas Lamirault <nicolas.lamirault@gmail.com>
 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -34,19 +34,18 @@ type CheckCommand struct {
 func (c *CheckCommand) Help() string {
 	helpText := `
 Usage: skybox check [options] action
-	Check box provider and output plugins
+	Check box provider
 Options:
 	` + generalOptionsUsage() + `
 Action :
         box                           Check box provider
-        output                        Check output plugin
 `
 	return strings.TrimSpace(helpText)
 }
 
 // Synopsis return the command message
 func (c *CheckCommand) Synopsis() string {
-	return "Check box provider and output plugins"
+	return "Check box provider"
 }
 
 // Run launch the command
@@ -73,12 +72,8 @@ func (c *CheckCommand) Run(args []string) int {
 		return 1
 	}
 	setLogging(debug)
-	conf, err := getConfiguration(configFile)
-	if err != nil {
-		c.UI.Error(err.Error())
-		return 1
-	}
-	agent, err := NewAgent(conf)
+
+	conf, agent, err := setup(configFile)
 	if err != nil {
 		c.UI.Error(err.Error())
 		return 1
@@ -89,8 +84,6 @@ func (c *CheckCommand) Run(args []string) int {
 	switch action {
 	case "box":
 		c.doCheckBoxProvider(agent, conf)
-	case "output":
-		c.doCheckOutputPlugin(agent, conf)
 	default:
 		f.Usage()
 	}
@@ -113,22 +106,4 @@ func (c *CheckCommand) doCheckBoxProvider(agent *Agent, conf *config.Configurati
 		return
 	}
 	c.UI.Output(fmt.Sprintf("Box provider successfully configured"))
-}
-
-func (c *CheckCommand) doCheckOutputPlugin(agent *Agent, conf *config.Configuration) {
-	c.UI.Info(fmt.Sprintf("Check output plugin: %s", agent.Output.Description()))
-	log.Printf("[DEBUG] Skybox output plugin: %v", agent.Output)
-	if err := agent.Output.Setup(conf); err != nil {
-		c.UI.Error(err.Error())
-		return
-	}
-	if err := agent.Output.Connect(); err != nil {
-		c.UI.Error(err.Error())
-		return
-	}
-	if err := agent.Output.Ping(); err != nil {
-		c.UI.Error(err.Error())
-		return
-	}
-	c.UI.Output(fmt.Sprintf("Output plugin successfully configured"))
 }
