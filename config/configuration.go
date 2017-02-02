@@ -15,9 +15,10 @@
 package config
 
 import (
-	"log"
+	// "log"
 
 	"github.com/BurntSushi/toml"
+	"github.com/Sirupsen/logrus"
 )
 
 // Configuration holds configuration for Skybox.
@@ -45,18 +46,18 @@ func New() *Configuration {
 
 // LoadFileConfig returns a Configuration from reading the specified file (a toml file).
 func LoadFileConfig(file string) (*Configuration, error) {
-	log.Printf("[DEBUG] Load configuration file: %s", file)
+	logrus.Debugf("Load configuration file: %s", file)
 	configuration := New()
 	if _, err := toml.DecodeFile(file, configuration); err != nil {
 		return nil, err
 	}
-	log.Printf("[DEBUG] Configuration : %#v", configuration)
+	logrus.Debugf("Configuration : %#v", configuration)
 	if configuration.Freebox != nil {
-		log.Printf("[DEBUG] Configuration : %#v", configuration.Freebox)
+		logrus.Debugf("Configuration : %#v", configuration.Freebox)
 		configuration.BoxProvider = "freebox"
 	}
 	if configuration.Livebox != nil {
-		log.Printf("[DEBUG] Configuration : %#v", configuration.Livebox)
+		logrus.Debugf("Configuration : %#v", configuration.Livebox)
 		configuration.BoxProvider = "livebox"
 	}
 	return configuration, nil

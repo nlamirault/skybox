@@ -16,9 +16,11 @@ package livebox
 
 import (
 	"fmt"
-	"log"
+	//"log"
 	"net/http"
 	"net/url"
+
+	"github.com/Sirupsen/logrus"
 
 	"github.com/nlamirault/skybox/config"
 	"github.com/nlamirault/skybox/providers"
@@ -101,7 +103,7 @@ func (c *Client) Ping() error {
 	if err != nil {
 		return err
 	}
-	log.Printf("[DEBUG] Livebox Time: %s", resp.Result.Data.Time)
+	logrus.Debugf("Livebox Time: %s", resp.Result.Data.Time)
 	return nil
 }
 
@@ -111,7 +113,7 @@ func (c *Client) Authenticate() error {
 		if err != nil {
 			return err
 		}
-		log.Printf("[DEBUG] Livebox authentication done")
+		logrus.Debugf("Livebox authentication done")
 	}
 	return nil
 }
@@ -124,7 +126,7 @@ func (c *Client) Statistics() (*providers.ConnectionStatistics, error) {
 	if err != nil {
 		return nil, err
 	}
-	log.Printf("[DEBUG] Statistics: %s", conStatus)
+	logrus.Debugf("Statistics: %s", conStatus)
 	return &providers.ConnectionStatistics{}, nil
 }
 
@@ -136,7 +138,7 @@ func (c *Client) Network() (*providers.NetworkInformations, error) {
 	if err != nil {
 		return nil, err
 	}
-	log.Printf("[DEBUG] Wan: %s", wanStatus)
+	logrus.Debugf("Wan: %s", wanStatus)
 	return &providers.NetworkInformations{
 		IPV4Address: wanStatus.Result.Data.IPAddress,
 		IPV6Address: wanStatus.Result.Data.IPv6Address,
@@ -153,7 +155,7 @@ func (c *Client) Wifi() (*providers.WifiStatus, error) {
 	if err != nil {
 		return nil, err
 	}
-	log.Printf("[DEBUG] Wan: %s", wifiStatus)
+	logrus.Debugf("Wifi: %s", wifiStatus)
 	return &providers.WifiStatus{
 		State:  wifiStatus.Result.Status.Status,
 		Enable: wifiStatus.Result.Status.Enable,
@@ -168,7 +170,7 @@ func (c *Client) Devices() ([]*providers.BoxDevice, error) {
 	if err != nil {
 		return nil, err
 	}
-	log.Printf("[DEBUG] Devices: %s", devices)
+	logrus.Debugf("Devices: %s", devices)
 	thedevices := []*providers.BoxDevice{}
 	for _, dev := range devices.Result.Status {
 		if dev.Active && len(dev.IPAddress) > 0 {

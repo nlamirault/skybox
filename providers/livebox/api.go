@@ -16,7 +16,9 @@ package livebox
 
 import (
 	"fmt"
-	"log"
+	// "log"
+
+	"github.com/Sirupsen/logrus"
 
 	"github.com/nlamirault/skybox/providers"
 )
@@ -26,7 +28,7 @@ const (
 )
 
 func (c *Client) authenticate() (*apiAuthenticateResponse, error) {
-	log.Printf("[DEBUG] LiveboxAPI authenticate\n")
+	logrus.Debugf("LiveboxAPI authenticate\n")
 	var resp *apiAuthenticateResponse
 	cookies, err := providers.Do(
 		c,
@@ -43,12 +45,12 @@ func (c *Client) authenticate() (*apiAuthenticateResponse, error) {
 	}
 	c.Cookies = cookies
 	c.ContextID = resp.Data.ContextID
-	log.Printf("[DEBUG] ContextID: %s", c.ContextID)
+	logrus.Debugf("ContextID: %s", c.ContextID)
 	return resp, nil
 }
 
 func (c *Client) disconnect() (*apiDisconnectResponse, error) {
-	log.Printf("[DEBUG] LiveboxAPI Disconnect\n")
+	logrus.Debugf("LiveboxAPI Disconnect\n")
 	var resp *apiDisconnectResponse
 	_, err := providers.Do(
 		c,
@@ -63,7 +65,7 @@ func (c *Client) disconnect() (*apiDisconnectResponse, error) {
 }
 
 func (c *Client) connectionStatus() (*apiConnectionStatusResponse, error) {
-	log.Printf("[DEBUG] LiveboxAPI retrieve MIBs\n")
+	logrus.Debugf("LiveboxAPI retrieve MIBs\n")
 	var resp *apiConnectionStatusResponse
 	_, err := providers.Do(
 		c,
@@ -78,7 +80,7 @@ func (c *Client) connectionStatus() (*apiConnectionStatusResponse, error) {
 }
 
 func (c *Client) wanStatus() (*apiWanStatusResponse, error) {
-	log.Printf("[DEBUG] LiveboxAPI retrieve wan informations")
+	logrus.Debugf("LiveboxAPI retrieve wan informations")
 	var resp *apiWanStatusResponse
 	_, err := providers.Do(
 		c,
@@ -93,7 +95,7 @@ func (c *Client) wanStatus() (*apiWanStatusResponse, error) {
 }
 
 func (c *Client) wifiStatus() (*apiWifiStatusResponse, error) {
-	log.Printf("[DEBUG] LiveboxAPI retrieve wifi informations")
+	logrus.Debugf("LiveboxAPI retrieve wifi informations")
 	var resp *apiWifiStatusResponse
 	_, err := providers.Do(
 		c,
@@ -108,7 +110,7 @@ func (c *Client) wifiStatus() (*apiWifiStatusResponse, error) {
 }
 
 func (c *Client) tvStatus() (*apiTVStatusResponse, error) {
-	log.Printf("[DEBUG] LiveboxAPI retrieve device informations")
+	logrus.Debugf("LiveboxAPI retrieve device informations")
 	var resp *apiTVStatusResponse
 	_, err := providers.Do(
 		c,
@@ -123,7 +125,7 @@ func (c *Client) tvStatus() (*apiTVStatusResponse, error) {
 }
 
 func (c *Client) devices() (*apiDevicesResponse, error) {
-	log.Printf("[DEBUG] LiveboxAPI retrieve connected devices")
+	logrus.Debugf("LiveboxAPI retrieve connected devices")
 	var resp *apiDevicesResponse
 	_, err := providers.Do(
 		c,
@@ -138,7 +140,7 @@ func (c *Client) devices() (*apiDevicesResponse, error) {
 }
 
 func (c *Client) getTime() (*apiTimeResponse, error) {
-	log.Printf("[DEBUG] LiveboxAPI Get time\n")
+	logrus.Debugf("LiveboxAPI Get time\n")
 	var resp *apiTimeResponse
 	_, err := providers.Do(
 		c,

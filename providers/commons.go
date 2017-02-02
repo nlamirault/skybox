@@ -20,9 +20,11 @@ import (
 	"io/ioutil"
 	//"errors"
 	"fmt"
-	"log"
+	// "log"
 	"net/http"
 	"net/url"
+
+	"github.com/Sirupsen/logrus"
 
 	"github.com/nlamirault/skybox/version"
 )
@@ -53,7 +55,7 @@ func createRequest(method, uri string, body interface{}) (*http.Request, error) 
 	if err != nil {
 		return nil, err
 	}
-	log.Printf("[DEBUG] HTTP Request : %v", req)
+	logrus.Debugf("HTTP Request : %v", req)
 	return req, nil
 }
 
@@ -109,12 +111,12 @@ func Do(provider Provider, method, urlStr string, body interface{}, result inter
 		StatusCode: resp.StatusCode,
 		Message:    content,
 	}
-	log.Printf("[DEBUG] HTTP Error: %v\n", apiError)
+	logrus.Debugf("HTTP Error: %v\n", apiError)
 	return nil, &apiError
 }
 
 func decodeResponse(resp *http.Response, v interface{}) ([]*http.Cookie, error) {
-	log.Printf("[DEBUG] Decode response")
+	logrus.Debugf("Decode response")
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
@@ -123,7 +125,7 @@ func decodeResponse(resp *http.Response, v interface{}) ([]*http.Cookie, error) 
 	if len(resp.Cookies()) == 0 {
 		cookies = parseInvalidCookies(resp.Header)
 	}
-	log.Printf("[DEBUG] HTTP Response: code=%d / content=%s / cookies=%v",
+	logrus.Debugf("HTTP Response: code=%d / content=%s / cookies=%v",
 		resp.StatusCode, string(body), cookies)
 	err = json.Unmarshal(body, v)
 	if err != nil {
@@ -133,7 +135,7 @@ func decodeResponse(resp *http.Response, v interface{}) ([]*http.Cookie, error) 
 }
 
 func parseInvalidCookies(header http.Header) []*http.Cookie {
-	log.Printf("[DEBUG] Parse Invalid cookies")
+	logrus.Debugf("Parse Invalid cookies")
 	cookies := []*http.Cookie{}
 	for k, v := range header {
 		// fmt.Printf("H: %s ** %s\n", k, v)
@@ -141,13 +143,13 @@ func parseInvalidCookies(header http.Header) []*http.Cookie {
 			line := fmt.Sprintf("%s", v)
 			c := readCookie(line[1 : len(line)-1])
 			if c != nil {
-				log.Printf("[DEBUG] Append cookie: %s %#v", cookies, c)
+				// logrus.Debugf("Append cookie: %s %#v", cookies, c)
 				cookies = append(cookies, c)
-				log.Printf("[DEBUG] Cookies: %s ==== %#v", cookies, c)
+				// logrus.Debugf("Cookies: %s ==== %#v", cookies, c)
 			}
 		}
 	}
-	log.Printf("[DEBUG] Cookies: %v", cookies)
+	logrus.Debugf("Cookies: %v", cookies)
 	return cookies
 }
 

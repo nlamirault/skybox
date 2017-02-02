@@ -1,4 +1,4 @@
-// Copyright (C) 2015, 2016 Nicolas Lamirault <nicolas.lamirault@gmail.com>
+// Copyright (C) 2016, 2017 Nicolas Lamirault <nicolas.lamirault@gmail.com>
 
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,23 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package logging
+package cmd
 
 import (
-	//"fmt"
-	"log"
-	"os"
+	"fmt"
 
-	"github.com/hashicorp/logutils"
+	"github.com/urfave/cli"
+
+	"github.com/nlamirault/skybox/version"
 )
 
-// SetLogging initialize logging
-func SetLogging(level string) *logutils.LevelFilter {
-	filter := &logutils.LevelFilter{
-		Levels:   []logutils.LogLevel{"DEBUG", "INFO", "WARN", "ERROR", "FATAL"},
-		MinLevel: logutils.LogLevel(level),
-		Writer:   os.Stderr,
-	}
-	log.SetOutput(filter)
-	return filter
+// VersionCommand is the command which display application version
+var VersionCommand = cli.Command{
+	Name: "version",
+	Action: func(context *cli.Context) error {
+		fmt.Printf("Skybox v%s\n", version.Version)
+		return nil
+	},
 }

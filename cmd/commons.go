@@ -12,50 +12,30 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package command
+package cmd
 
 import (
 	"fmt"
-	"log"
+	// "log"
 	"path/filepath"
-	"strings"
 
+	"github.com/Sirupsen/logrus"
+	"github.com/fatih/color"
 	"github.com/mitchellh/go-homedir"
 
 	"github.com/nlamirault/skybox/config"
-	"github.com/nlamirault/skybox/logging"
 	"github.com/nlamirault/skybox/providers"
+)
+
+var (
+	greenOut  = color.New(color.FgGreen).SprintFunc()
+	yellowOut = color.New(color.FgYellow).SprintFunc()
+	redOut    = color.New(color.FgRed).SprintFunc()
 )
 
 const (
 	defaultConfigurationFile = ".config/skybox/skybox.toml"
 )
-
-// generalOptionsUsage returns the usage documenation for commonly
-// available options
-func generalOptionsUsage() string {
-	general := `
-        --debug                       Debug mode enabled
-`
-	return strings.TrimSpace(general)
-}
-
-func checkArguments(args ...string) bool {
-	for _, arg := range args {
-		if len(arg) == 0 {
-			return false
-		}
-	}
-	return true
-}
-
-func setLogging(debug bool) {
-	if debug {
-		logging.SetLogging("DEBUG")
-	} else {
-		logging.SetLogging("INFO")
-	}
-}
 
 func getConfigurationFile() (string, error) {
 	home, err := homedir.Dir()
@@ -80,16 +60,15 @@ func getConfiguration(filename string) (*config.Configuration, error) {
 
 // NewAgent creates a new instance of Agent.
 func NewAgent(conf *config.Configuration) (*Agent, error) {
-	log.Printf("[DEBUG] Box Providers: %v\n", providers.Providers)
+	logrus.Debugf("Box Providers: %v\n", providers.Providers)
 	providerCreator := providers.Providers[conf.BoxProvider]
 	if providerCreator == nil {
 		return nil, fmt.Errorf("No box provider found for %s", conf.BoxProvider)
 	}
 	provider := providerCreator()
-	log.Printf("[DEBUG] Box Provider: %s\n", provider)
+	logrus.Debugf("Box Provider: %s\n", provider)
 	return &Agent{
 		Provider: provider,
-		// Output:   output,
 	}, nil
 }
 

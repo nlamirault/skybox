@@ -3,22 +3,16 @@
 	"ignore": "test",
 	"package": [
 		{
-			"checksumSHA1": "gNO0JNpLzYOdInGeq7HqMZUzx9M=",
-			"path": "github.com/armon/go-radix",
-			"revision": "4239b77079c7b5d1243b7b4736304ce8ddb6f0f2",
-			"revisionTime": "2016-01-15T23:47:25Z"
+			"checksumSHA1": "XEBl9iQQvfXNlwCSzyAOCqAlYEA=",
+			"path": "github.com/fatih/color",
+			"revision": "42c364ba490082e4815b5222728711b3440603eb",
+			"revisionTime": "2017-01-13T15:16:12Z"
 		},
 		{
-			"checksumSHA1": "Isa9x3nvIJ12hvgdvUUBty+yplU=",
-			"path": "github.com/bgentry/speakeasy",
-			"revision": "675b82c74c0ed12283ee81ba8a534c8982c07b85",
-			"revisionTime": "2016-10-13T10:26:35Z"
-		},
-		{
-			"checksumSHA1": "vt+P9D2yWDO3gdvdgCzwqunlhxU=",
-			"path": "github.com/hashicorp/logutils",
-			"revision": "0dc08b1671f34c4250ce212759ebd880f743d883",
-			"revisionTime": "2015-06-09T07:04:31Z"
+			"checksumSHA1": "I4njd26dG5hxFT2nawuByM4pxzY=",
+			"path": "github.com/mattn/go-colorable",
+			"revision": "d228849504861217f796da67fae4f6e347643f15",
+			"revisionTime": "2016-11-03T16:00:40Z"
 		},
 		{
 			"checksumSHA1": "xZuhljnmBysJPta/lMyYmJdujCg=",
@@ -27,10 +21,10 @@
 			"revisionTime": "2016-11-23T14:36:37Z"
 		},
 		{
-			"checksumSHA1": "6zsRRzJoi5zxQMp6iV/2EraRxPA=",
-			"path": "github.com/mitchellh/cli",
-			"revision": "16bda1254c1d199d9f10a4b90060eda75221a006",
-			"revisionTime": "2017-02-01T16:57:07Z"
+			"checksumSHA1": "1keN4Q9F8uHk/Gt5YXG0oCEecKM=",
+			"path": "github.com/urfave/cli",
+			"revision": "347a9884a87374d000eec7e6445a34487c1f4a2b",
+			"revisionTime": "2017-01-28T21:39:59Z"
 		},
 		{
 			"checksumSHA1": "uTQtOqR0ePMMcvuvAIksiIZxhqU=",

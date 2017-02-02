@@ -17,11 +17,13 @@ package providers
 import (
 	"bytes"
 	"fmt"
-	"log"
+	//"log"
 	"net/http"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/Sirupsen/logrus"
 )
 
 // TimeFormat is the time format to use with
@@ -69,7 +71,7 @@ func sanitizeOrWarn(fieldName string, valid func(byte) bool, v string) string {
 		if valid(v[i]) {
 			continue
 		}
-		log.Printf("net/http: invalid byte %q in %s; dropping invalid bytes", v[i], fieldName)
+		logrus.Debugf("net/http: invalid byte %q in %s; dropping invalid bytes", v[i], fieldName)
 		ok = false
 		break
 	}
@@ -146,7 +148,7 @@ func generateCookie(c *http.Cookie) string {
 }
 
 func readCookie(line string) *http.Cookie {
-	log.Printf("[DEBUG] Line: %s", line)
+	logrus.Debugf("Line: %s", line)
 	parts := strings.Split(strings.TrimSpace(line), ";")
 	if len(parts) == 1 && parts[0] == "" {
 		return nil
@@ -170,7 +172,7 @@ func readCookie(line string) *http.Cookie {
 		Value: value,
 		Raw:   line,
 	}
-	log.Printf("[DEBUG] Find cookie: %#v %s %s %s", c, name, value, line)
+	logrus.Debugf("Find cookie: %#v %s %s %s", c, name, value, line)
 	for i := 1; i < len(parts); i++ {
 		parts[i] = strings.TrimSpace(parts[i])
 		if len(parts[i]) == 0 {
@@ -226,6 +228,6 @@ func readCookie(line string) *http.Cookie {
 		}
 		c.Unparsed = append(c.Unparsed, parts[i])
 	}
-	log.Printf("[DEBUG] Cookie ok: %#v", c)
+	logrus.Debugf("Cookie ok: %#v", c)
 	return c
 }

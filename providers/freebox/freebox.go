@@ -16,9 +16,11 @@ package freebox
 
 import (
 	"fmt"
-	"log"
+	// "log"
 	"net/http"
 	"net/url"
+
+	"github.com/Sirupsen/logrus"
 
 	"github.com/nlamirault/skybox/config"
 	"github.com/nlamirault/skybox/providers"
@@ -102,7 +104,7 @@ func (c *Client) Ping() error {
 	if err != nil {
 		return err
 	}
-	log.Printf("[DEBUG] Freebox Ping received")
+	logrus.Debugf("Freebox Ping received")
 	return nil
 }
 
@@ -112,7 +114,7 @@ func (c *Client) Authenticate() error {
 		if err != nil {
 			return err
 		}
-		log.Printf("[DEBUG] Freebox authentication done")
+		logrus.Debugf("Freebox authentication done")
 		return nil
 	}
 	_, err := c.login()
@@ -123,20 +125,20 @@ func (c *Client) Authenticate() error {
 	if err != nil {
 		return err
 	}
-	log.Printf("[DEBUG] Freebox login done")
+	logrus.Debugf("Freebox login done")
 	if c.SessionToken == "" {
 		_, err = c.openSession()
 		if err != nil {
 			return err
 		}
 	}
-	log.Printf("[DEBUG] Freebox open session done")
+	logrus.Debugf("Freebox open session done")
 	return err
 
 }
 
 func (c *Client) Statistics() (*providers.ConnectionStatistics, error) {
-	log.Printf("[DEBUG] Freebox retrieve statistics\n")
+	logrus.Debugf("Freebox retrieve statistics\n")
 	resp, err := c.connectionStatus()
 	if err != nil {
 		apiError, err := makeAPIErrorResponse(err)
@@ -153,7 +155,7 @@ func (c *Client) Statistics() (*providers.ConnectionStatistics, error) {
 		}
 		return nil, err
 	}
-	log.Printf("[DEBUG] Freebox connection status received")
+	logrus.Debugf("Freebox connection status received")
 	return &providers.ConnectionStatistics{
 		RateDown:      resp.Result.RateDown,
 		RateUp:        resp.Result.RateUp,

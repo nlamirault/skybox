@@ -19,7 +19,9 @@ import (
 	"crypto/sha1"
 	"encoding/json"
 	"fmt"
-	"log"
+	// "log"
+
+	"github.com/Sirupsen/logrus"
 
 	"github.com/nlamirault/skybox/providers"
 )
@@ -77,7 +79,7 @@ func (c *Client) version() (*apiVersionResponse, error) {
 		fmt.Sprintf("%s/api_version", c.EndPoint()),
 		nil,
 		&resp)
-	log.Printf("[DEBUG] FreeboxAPI version response: %v", resp)
+	logrus.Debugf("FreeboxAPI version response: %v", resp)
 	return resp, err
 }
 
@@ -99,7 +101,7 @@ type apiAuthorizeResponse struct {
 }
 
 func (c *Client) authorize() (*apiAuthorizeResponse, error) {
-	log.Printf("[DEBUG] FreeboxAPI retrieve authorization\n")
+	logrus.Debugf("FreeboxAPI retrieve authorization\n")
 	var resp *apiAuthorizeResponse
 	_, err := providers.Do(
 		c,
@@ -115,7 +117,7 @@ func (c *Client) authorize() (*apiAuthorizeResponse, error) {
 	if err != nil {
 		return nil, err
 	}
-	log.Printf("[DEBUG] FreeboxAPI Authorize response: %v", resp)
+	logrus.Debugf("FreeboxAPI Authorize response: %v", resp)
 	return resp, nil
 }
 
@@ -149,7 +151,7 @@ type apiConnectionStatusResponse struct {
 }
 
 func (c *Client) connectionStatus() (*apiConnectionStatusResponse, error) {
-	log.Printf("[DEBUG] FreeboxAPI connection status\n")
+	logrus.Debugf("FreeboxAPI connection status\n")
 	var resp *apiConnectionStatusResponse
 	_, err := providers.Do(
 		c,
@@ -160,7 +162,7 @@ func (c *Client) connectionStatus() (*apiConnectionStatusResponse, error) {
 	if err != nil {
 		return nil, err
 	}
-	log.Printf("[DEBUG] FreeboxAPI connection status response: %v", resp)
+	logrus.Debugf("FreeboxAPI connection status response: %v", resp)
 	return resp, nil
 }
 
@@ -173,7 +175,7 @@ type apiLoginResponse struct {
 }
 
 func (c *Client) login() (*apiLoginResponse, error) {
-	log.Printf("[DEBUG] FreeboxAPI login\n")
+	logrus.Debugf("FreeboxAPI login\n")
 	var resp *apiLoginResponse
 	_, err := providers.Do(
 		c,
@@ -185,7 +187,7 @@ func (c *Client) login() (*apiLoginResponse, error) {
 		return nil, err
 	}
 	c.Challenge = resp.Result.Challenge
-	log.Printf("[DEBUG] FreeboxAPI login response: %v", resp)
+	logrus.Debugf("FreeboxAPI login response: %v", resp)
 	return resp, nil
 }
 
@@ -214,7 +216,7 @@ type apiLoginSessionResponse struct {
 }
 
 func (c *Client) openSession() (*apiLoginSessionResponse, error) {
-	log.Printf("[DEBUG] FreeboxAPI open session\n")
+	logrus.Debugf("FreeboxAPI open session\n")
 	hash := hmac.New(sha1.New, []byte(c.Token))
 	hash.Write([]byte(c.Challenge))
 	c.Password = fmt.Sprintf("%x", hash.Sum(nil))
@@ -232,7 +234,7 @@ func (c *Client) openSession() (*apiLoginSessionResponse, error) {
 	if err != nil {
 		return nil, err
 	}
-	log.Printf("[DEBUG] FreeboxAPI open session response: %v", resp)
+	logrus.Debugf("FreeboxAPI open session response: %v", resp)
 	c.SessionToken = resp.Result.SessionToken
 	return resp, nil
 }
@@ -252,7 +254,7 @@ func (c *Client) closeSession() (*apiLogoutSessionResponse, error) {
 	if err != nil {
 		return nil, err
 	}
-	log.Printf("[DEBUG] FreeboxAPI close session response: %v", resp)
+	logrus.Debugf("FreeboxAPI close session response: %v", resp)
 	c.SessionToken = ""
 	return resp, err
 }

@@ -14,35 +14,81 @@
 
 package main
 
+// import (
+// 	"fmt"
+// 	"os"
+
+// 	"github.com/mitchellh/cli"
+
+// 	_ "github.com/nlamirault/skybox/providers/freebox"
+// 	_ "github.com/nlamirault/skybox/providers/livebox"
+// 	"github.com/nlamirault/skybox/version"
+// )
+
+// func main() {
+// 	os.Exit(realMain())
+// }
+
+// func realMain() int {
+// 	cli := &cli.CLI{
+// 		Args:       os.Args[1:],
+// 		Commands:   Commands,
+// 		HelpFunc:   cli.BasicHelpFunc("skybox"),
+// 		HelpWriter: os.Stdout,
+// 		Version:    version.Version,
+// 	}
+
+// 	exitCode, err := cli.Run()
+// 	if err != nil {
+// 		UI.Error(fmt.Sprintf("Error executing CLI: %s", err.Error()))
+// 		return 1
+// 	}
+
+// 	return exitCode
+// }
+
 import (
-	"fmt"
+	// "fmt"
 	"os"
 
-	"github.com/mitchellh/cli"
+	"github.com/Sirupsen/logrus"
+	"github.com/urfave/cli"
 
+	"github.com/nlamirault/skybox/cmd"
 	_ "github.com/nlamirault/skybox/providers/freebox"
 	_ "github.com/nlamirault/skybox/providers/livebox"
 	"github.com/nlamirault/skybox/version"
 )
 
 func main() {
-	os.Exit(realMain())
-}
+	app := cli.NewApp()
+	app.Name = "skybox"
+	app.Usage = "The box provider toolkit"
+	app.Version = version.Version
 
-func realMain() int {
-	cli := &cli.CLI{
-		Args:       os.Args[1:],
-		Commands:   Commands,
-		HelpFunc:   cli.BasicHelpFunc("skybox"),
-		HelpWriter: os.Stdout,
-		Version:    version.Version,
+	app.Commands = []cli.Command{
+		cmd.VersionCommand,
+		cmd.CheckCommand,
+		cmd.BoxCommand,
 	}
 
-	exitCode, err := cli.Run()
-	if err != nil {
-		UI.Error(fmt.Sprintf("Error executing CLI: %s", err.Error()))
-		return 1
+	app.Flags = []cli.Flag{
+		cli.BoolFlag{
+			Name: "debug",
+			//Value: true,
+			Usage: "Enable debug mode",
+		},
 	}
-
-	return exitCode
+	app.Action = func(context *cli.Context) error {
+		if context.Bool("debug") {
+			logrus.SetLevel(logrus.DebugLevel)
+		} else {
+			logrus.SetLevel(logrus.WarnLevel)
+		}
+		return nil
+	}
+	// logrus.SetLevel(logrus.DebugLevel)
+	if err := app.Run(os.Args); err != nil {
+		logrus.Fatal(err)
+	}
 }
