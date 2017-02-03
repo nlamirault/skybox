@@ -27,7 +27,6 @@ DIR = $(shell pwd)
 DOCKER = docker
 
 GO = go
-GLIDE = glide
 
 GOX = gox -os="linux darwin windows freebsd openbsd netbsd"
 GOX_ARGS = "-output={{.Dir}}-$(VERSION)_{{.OS}}_{{.Arch}}"
@@ -46,8 +45,8 @@ MAKE_COLOR=\033[33;01m%-20s\033[0m
 
 MAIN = github.com/nlamirault/helmsman
 SRCS = $(shell git ls-files '*.go' | grep -v '^vendor/')
-PKGS = $(shell glide novendor)
-EXE = $(shell ls helmsman-*_*)
+PKGS = $(shell go list ./... | grep -v /vendor/)
+EXE = $(shell ls skybox-*_*)
 
 PACKAGE=$(APP)-$(VERSION)
 ARCHIVE=$(PACKAGE).tar
@@ -100,11 +99,10 @@ vet: ## Launch go vet
 .PHONY: errcheck
 errcheck: ## Launch go errcheck
 	@echo -e "$(OK_COLOR)[$(APP)] Go Errcheck $(NO_COLOR)"
-	@$(foreach pkg,$(PKGS),errcheck $(pkg) $(glide novendor) || exit;)
+	@$(foreach pkg,$(PKGS),errcheck $(pkg) || exit;)
 
 .PHONY: coverage
 coverage: ## Launch code coverage
-#	@$(foreach pkg,$(PKGS),$(GO) test -cover $(pkg) $(glide novendor) || exit;)
 	@$(foreach pkg,$(PKGS),$(GO) test -cover $(pkg) || exit;)
 
 gox: ## Make all binaries
