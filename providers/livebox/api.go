@@ -64,6 +64,21 @@ func (c *Client) disconnect() (*apiDisconnectResponse, error) {
 	return resp, nil
 }
 
+func (c *Client) boxDevice() (*apiBoxDeviceResponse, error) {
+	logrus.Debugf("LiveboxAPI retrieve box informations")
+	var resp *apiBoxDeviceResponse
+	_, err := providers.Do(
+		c,
+		"GET",
+		c.getLiveboxAPIRequest("DeviceInfo?_restDepth=-1"),
+		nil,
+		&resp)
+	if err != nil {
+		return nil, err
+	}
+	return resp, nil
+}
+
 func (c *Client) connectionStatus() (*apiConnectionStatusResponse, error) {
 	logrus.Debugf("LiveboxAPI retrieve MIBs\n")
 	var resp *apiConnectionStatusResponse

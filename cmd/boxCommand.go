@@ -54,6 +54,16 @@ func boxProviderInformations(agent *Agent, conf *config.Configuration) error {
 	if err := agent.Provider.Authenticate(); err != nil {
 		return err
 	}
+
+	description, err := agent.Provider.Informations()
+	if err != nil {
+		return err
+	}
+	fmt.Printf(yellowOut("== Box ==\n"))
+	for k, v := range description.Informations {
+		fmt.Printf("%s: %s\n", k, v)
+	}
+
 	network, err := agent.Provider.Network()
 	if err != nil {
 		return err

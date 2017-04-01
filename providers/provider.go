@@ -70,6 +70,9 @@ type Provider interface {
 
 	// Devices retrieve connected devices
 	Devices() ([]*BoxDevice, error)
+
+	// Informations retrieve some informations about the box
+	Informations() (*BoxDescription, error)
 }
 
 // ConnectionStatistics represents commons statistics for box provider
@@ -113,4 +116,9 @@ type BoxDevice struct {
 	Type      string `json:"type"`
 	Name      string `json:"name"`
 	IPAddress string `json:"ipaddress"`
+}
+
+// BoxDescription define some commons informations about a box
+type BoxDescription struct {
+	Informations map[string]string
 }

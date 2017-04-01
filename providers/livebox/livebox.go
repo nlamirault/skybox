@@ -206,3 +206,31 @@ func (c *Client) Devices() ([]*providers.BoxDevice, error) {
 	}
 	return thedevices, nil
 }
+
+func (c *Client) Informations() (*providers.BoxDescription, error) {
+	if err := c.Authenticate(); err != nil {
+		return nil, err
+	}
+	description, err := c.boxDevice()
+	if err != nil {
+		return nil, err
+	}
+	informations := map[string]string{}
+	for _, param := range description.Parameters {
+		// logrus.Infof("%s %s %s", param.Name, param.Type, param.Value)
+		switch param.Type {
+		case "string":
+			informations[param.Name] = fmt.Sprintf("%s", param.Value)
+		case "date_time":
+			informations[param.Name] = fmt.Sprintf("%s", param.Value)
+		case "uint32":
+			informations[param.Name] = fmt.Sprintf("%v", param.Value)
+		default:
+			informations[param.Name] = fmt.Sprintf("%s", param.Value)
+		}
+
+	}
+	return &providers.BoxDescription{
+		Informations: informations,
+	}, nil
+}

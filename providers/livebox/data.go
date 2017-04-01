@@ -649,3 +649,104 @@ type apiDevicesResponse struct {
 		} `json:"status"`
 	} `json:"result"`
 }
+
+type apiBoxDeviceResponse struct {
+	ObjectInfo struct {
+		IndexPath  string `json:"indexPath"`
+		KeyPath    string `json:"keyPath"`
+		Name       string `json:"name"`
+		Key        string `json:"key"`
+		Attributes struct {
+		} `json:"attributes"`
+		State          string `json:"state"`
+		ParameterCount int    `json:"parameterCount"`
+		ChildCount     int    `json:"childCount"`
+		InstanceCount  int    `json:"instanceCount"`
+	} `json:"objectInfo"`
+	Functions []struct {
+		Name       string `json:"name"`
+		Type       string `json:"type"`
+		Attributes struct {
+		} `json:"attributes"`
+		Arguments []interface{} `json:"arguments"`
+	} `json:"functions"`
+	Parameters []struct {
+		Name       string `json:"name"`
+		Type       string `json:"type"`
+		Attributes struct {
+			ReadOnly bool `json:"read_only"`
+		} `json:"attributes"`
+		State string      `json:"state"`
+		Value interface{} `json:"value"`
+		// Validator struct {
+		// 	Max string `json:"max"`
+		// } `json:"validator,omitempty"`
+	} `json:"parameters"`
+	Children []struct {
+		ObjectInfo struct {
+			IndexPath  string `json:"indexPath"`
+			KeyPath    string `json:"keyPath"`
+			Name       string `json:"name"`
+			Key        string `json:"key"`
+			Attributes struct {
+				Template   bool `json:"template"`
+				Persistent bool `json:"persistent"`
+			} `json:"attributes"`
+			State          string `json:"state"`
+			ParameterCount int    `json:"parameterCount"`
+			ChildCount     int    `json:"childCount"`
+			InstanceCount  int    `json:"instanceCount"`
+		} `json:"objectInfo"`
+		TemplateInfo struct {
+			MaxInstances int64 `json:"maxInstances"`
+		} `json:"templateInfo"`
+		Functions  []interface{} `json:"functions"`
+		Parameters []struct {
+			Name       string `json:"name"`
+			Type       string `json:"type"`
+			Attributes struct {
+				ReadOnly   bool `json:"read_only"`
+				Persistent bool `json:"persistent"`
+			} `json:"attributes"`
+			State     string `json:"state"`
+			Value     string `json:"value"`
+			Validator struct {
+				Max string `json:"max"`
+			} `json:"validator,omitempty"`
+		} `json:"parameters"`
+		Children  []interface{} `json:"children"`
+		Instances []struct {
+			ObjectInfo struct {
+				IndexPath  string `json:"indexPath"`
+				KeyPath    string `json:"keyPath"`
+				Name       string `json:"name"`
+				Key        string `json:"key"`
+				Attributes struct {
+					Instance   bool `json:"instance"`
+					Persistent bool `json:"persistent"`
+				} `json:"attributes"`
+				State          string `json:"state"`
+				ParameterCount int    `json:"parameterCount"`
+				ChildCount     int    `json:"childCount"`
+				InstanceCount  int    `json:"instanceCount"`
+			} `json:"objectInfo"`
+			Functions  []interface{} `json:"functions"`
+			Parameters []struct {
+				Name       string `json:"name"`
+				Type       string `json:"type"`
+				Attributes struct {
+					ReadOnly   bool `json:"read_only"`
+					Persistent bool `json:"persistent"`
+				} `json:"attributes"`
+				State     string `json:"state"`
+				Value     string `json:"value"`
+				Validator struct {
+					Max string `json:"max"`
+				} `json:"validator,omitempty"`
+			} `json:"parameters"`
+			Children  []interface{} `json:"children"`
+			Instances []interface{} `json:"instances"`
+		} `json:"instances"`
+	} `json:"children"`
+	Instances []interface{} `json:"instances"`
+}

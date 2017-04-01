@@ -181,3 +181,7 @@ func (c *Client) TV() ([]*providers.TVStatus, error) {
 func (c *Client) Devices() ([]*providers.BoxDevice, error) {
 	return nil, fmt.Errorf("Not implemented")
 }
+
+func (c *Client) Informations() (*providers.BoxDescription, error) {
+	return nil, fmt.Errorf("Not implemented")
+}
