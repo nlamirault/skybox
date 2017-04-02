@@ -45,10 +45,10 @@ func getConfigurationFile() (string, error) {
 	return filepath.Join(home, defaultConfigurationFile), nil
 }
 
-// Agent provides a box provider client
-type Agent struct {
-	Provider providers.Provider
-}
+// // Agent provides a box provider client
+// type Agent struct {
+// 	Provider providers.Provider
+// }
 
 func getConfiguration(filename string) (*config.Configuration, error) {
 	conf, err := config.LoadFileConfig(filename)
@@ -58,8 +58,7 @@ func getConfiguration(filename string) (*config.Configuration, error) {
 	return conf, nil
 }
 
-// NewAgent creates a new instance of Agent.
-func NewAgent(conf *config.Configuration) (*Agent, error) {
+func newProvider(conf *config.Configuration) (providers.Provider, error) {
 	logrus.Debugf("Box Providers: %v\n", providers.Providers)
 	providerCreator := providers.Providers[conf.BoxProvider]
 	if providerCreator == nil {
@@ -67,19 +66,21 @@ func NewAgent(conf *config.Configuration) (*Agent, error) {
 	}
 	provider := providerCreator()
 	logrus.Debugf("Box Provider: %s\n", provider)
-	return &Agent{
-		Provider: provider,
-	}, nil
+	// return &Agent{
+	// 	Provider: provider,
+	// }, nil
+	return provider, nil
 }
 
-func setup(filename string) (*config.Configuration, *Agent, error) {
+func setup(filename string) (*config.Configuration, providers.Provider, error) {
 	conf, err := getConfiguration(filename)
 	if err != nil {
 		return nil, nil, err
 	}
-	agent, err := NewAgent(conf)
+	// agent, err := NewAgent(conf)
+	provider, err := newProvider(conf)
 	if err != nil {
 		return nil, nil, err
 	}
-	return conf, agent, nil
+	return conf, provider, nil
 }

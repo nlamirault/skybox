@@ -14,39 +14,6 @@
 
 package main
 
-// import (
-// 	"fmt"
-// 	"os"
-
-// 	"github.com/mitchellh/cli"
-
-// 	_ "github.com/nlamirault/skybox/providers/freebox"
-// 	_ "github.com/nlamirault/skybox/providers/livebox"
-// 	"github.com/nlamirault/skybox/version"
-// )
-
-// func main() {
-// 	os.Exit(realMain())
-// }
-
-// func realMain() int {
-// 	cli := &cli.CLI{
-// 		Args:       os.Args[1:],
-// 		Commands:   Commands,
-// 		HelpFunc:   cli.BasicHelpFunc("skybox"),
-// 		HelpWriter: os.Stdout,
-// 		Version:    version.Version,
-// 	}
-
-// 	exitCode, err := cli.Run()
-// 	if err != nil {
-// 		UI.Error(fmt.Sprintf("Error executing CLI: %s", err.Error()))
-// 		return 1
-// 	}
-
-// 	return exitCode
-// }
-
 import (
 	// "fmt"
 	"os"
@@ -68,7 +35,7 @@ func main() {
 
 	app.Commands = []cli.Command{
 		cmd.VersionCommand,
-		cmd.CheckCommand,
+		cmd.MetricsCommand,
 		cmd.BoxCommand,
 	}
 

@@ -67,8 +67,39 @@ password = "xxx"
 
 ## Usage
 
+* Help:
+
 ```
-$ ./skybox --debug box  infos
+$ skybox help
+NAME:
+   skybox - The box provider toolkit
+
+USAGE:
+   skybox [global options] command [command options] [arguments...]
+
+VERSION:
+   0.1.0
+
+COMMANDS:
+     version
+     metrics
+     box
+     help, h  Shows a list of commands or help for one command
+
+GLOBAL OPTIONS:
+   --debug        Enable debug mode
+   --help, -h     show help
+   --version, -v  print the version
+```
+
+* Box provider
+
+```
+$ skybox box check
+Check box provider: livebox
+Box provider successfully configured
+
+$ skybox --debug box infos
 Box provider: livebox
 == Box ==
 AdditionalHardwareVersion:
@@ -112,6 +143,13 @@ State: true
 - jarvis: 192.168.1.12 [wifi]
 - Android: 192.168.1.14 [wifi]
 - LIVEBOX: 192.168.1.1 [wifi]
+```
+
+* Metrics
+
+```
+$ skybox metrics export
+
 ```
 
 
