@@ -83,37 +83,47 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 		return
 	}
 
-	for k, v := range description.Informations {
-		if k == "DeviceStatus" {
-			if v == "Up" {
-				ch <- prometheus.MustNewConstMetric(states, prometheus.GaugeValue, 1, k)
-			} else {
-				ch <- prometheus.MustNewConstMetric(states, prometheus.GaugeValue, 0, k)
-			}
+	// for k, v := range description.Informations {
+	// 	if k == "DeviceStatus" {
+	// 		if v == "Up" {
+	// 			ch <- prometheus.MustNewConstMetric(states, prometheus.GaugeValue, 1, k)
+	// 		} else {
+	// 			ch <- prometheus.MustNewConstMetric(states, prometheus.GaugeValue, 0, k)
+	// 		}
+	// 	}
+	// }
+	deviceState := 0
+	val, ok := description.Informations["DeviceStatus"]
+	if ok {
+		if val == "Up" {
+			deviceState = 1
 		}
 	}
+	ch <- prometheus.MustNewConstMetric(states, prometheus.GaugeValue, float64(deviceState), "DeviceStatus")
 
 	network, err := e.Provider.Network()
 	if err != nil {
 		log.Errorf("Can't retrieve network: %s", err.Error())
 		return
 	}
+	networkState := 0
 	if network.State == "up" {
-		ch <- prometheus.MustNewConstMetric(states, prometheus.GaugeValue, 1, "network")
-	} else {
-		ch <- prometheus.MustNewConstMetric(states, prometheus.GaugeValue, 0, "network")
+		networkState = 1
 	}
+	log.Infof("Add network metric: %s %d", "network", networkState)
+	ch <- prometheus.MustNewConstMetric(states, prometheus.GaugeValue, float64(networkState), "network")
 
 	wifi, err := e.Provider.Wifi()
 	if err != nil {
 		log.Errorf("Can't retrieve wifi: %s", err.Error())
 		return
 	}
+	wifiState := 0
 	if wifi.State {
-		ch <- prometheus.MustNewConstMetric(states, prometheus.GaugeValue, 1, "wifi")
-	} else {
-		ch <- prometheus.MustNewConstMetric(states, prometheus.GaugeValue, 0, "wifi")
+		wifiState = 1
 	}
+	log.Infof("Add wifi metric: %s %d", "wifi", wifiState)
+	ch <- prometheus.MustNewConstMetric(states, prometheus.GaugeValue, float64(wifiState), "wifi")
 
 	tv, err := e.Provider.TV()
 	if err != nil {
@@ -121,11 +131,13 @@ func (e *Exporter) Collect(ch chan<- prometheus.Metric) {
 		return
 	}
 	for _, st := range tv {
+		val := 0
 		if st.State {
-			ch <- prometheus.MustNewConstMetric(states, prometheus.GaugeValue, 1, st.Name)
-		} else {
-			ch <- prometheus.MustNewConstMetric(states, prometheus.GaugeValue, 0, st.Name)
+			val = 1
 		}
+		log.Infof("Add metric: %s %d", st.Name, val)
+		ch <- prometheus.MustNewConstMetric(states, prometheus.GaugeValue, float64(val), st.Name)
+
 	}
 
 	boxDevices, err := e.Provider.Devices()
