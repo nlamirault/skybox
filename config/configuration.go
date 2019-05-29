@@ -18,7 +18,7 @@ import (
 	// "log"
 
 	"github.com/BurntSushi/toml"
-	"github.com/Sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 )
 
 // Configuration holds configuration for Skybox.

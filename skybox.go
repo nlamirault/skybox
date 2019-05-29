@@ -18,7 +18,7 @@ import (
 	// "fmt"
 	"os"
 
-	"github.com/Sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
 
 	"github.com/nlamirault/skybox/cmd"

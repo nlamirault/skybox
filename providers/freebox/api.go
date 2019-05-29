@@ -21,7 +21,7 @@ import (
 	"fmt"
 	// "log"
 
-	"github.com/Sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 
 	"github.com/nlamirault/skybox/providers"
 )
